@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <title>{% block title %}Grafos, árboles, listas{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'grafos/css/layout.css' %}" />
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    <!-- navbar -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="{% url 'home' %}" class="nav-logo">Nombre del proyecto aquí</a>
+
+        <ul class="nav-links">
+          <li><a href="{% url 'home' %}">Inicio</a></li>
+          <li><a href="{% url 'info' %}">Información</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="container">{% block content %}{% endblock %}</main>
+
+    <!-- footer -->
+    <footer class="footer">
+      <p>© 2025 Proyecto de Grafos — Todos los derechos reservados</p>
+      <p>Desarrollado por Cristian Chantre & Edwin Burbano</p>
+    </footer>
+  </body>
+</html>
