@@ -1,58 +1,75 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.views.decorators.csrf import csrf_exempt
-import json
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from . import views_logic
 
-def home(request):
-    return render(request, "home.html")
 
-def info(request):
-    return render(request, "info.html")
-
-@csrf_exempt
-def add_product(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            product = {
-                "name": data.get("name"),
-                "brand": data.get("brand"),
-                "product_type": data.get("product_type"),
-                "presentation": data.get("presentation"),
-            }
-            from . import views_logic
-            views_logic.add_product_to_list(product)
-            return JsonResponse({"message": "Product added successfully"})
-        except Exception as e:
-            return HttpResponseBadRequest(f"Error: {str(e)}")
+def inicio(request):
+    """
+    Vista principal con inventario de productos y cálculo automático de ruta.
+    """
+    inventario = views_logic.obtener_inventario_productos()
+    categorias = views_logic.obtener_categorias()
+    
+    # Filtrado por búsqueda o categoría
+    termino_busqueda = request.GET.get('buscar', '')
+    categoria_filtro = request.GET.get('categoria', '')
+    
+    if termino_busqueda:
+        productos = views_logic.buscar_productos(termino_busqueda)
+    elif categoria_filtro:
+        productos = views_logic.obtener_productos_por_categoria(categoria_filtro)
     else:
-        return HttpResponseBadRequest("Only POST method allowed")
+        productos = inventario
+    
+    context = {
+        'productos': productos,
+        'categorias': categorias,
+        'termino_busqueda': termino_busqueda,
+        'categoria_filtro': categoria_filtro,
+    }
+    
+    return render(request, 'inicio.html', context)
 
-def list_products(request):
-    from . import views_logic
-    products = views_logic.get_all_products()
-    return JsonResponse({"products": products})
 
-def search_category(request):
-    category_name = request.GET.get("name")
-    if not category_name:
-        return HttpResponseBadRequest("Missing 'name' parameter")
-    from . import views_logic
-    category_node = views_logic.find_category_node(category_name)
-    if category_node:
-        children = [child.name for child in category_node.children]
-        return JsonResponse({"category": category_node.name, "children": children})
-    else:
-        return JsonResponse({"error": "Category not found"}, status=404)
+def calcular_ruta(request):
+    """
+    Calcula la ruta óptima automáticamente para los productos seleccionados.
+    Siempre inicia en Entrada y termina en Caja.
+    """
+    if request.method == 'POST':
+        # Obtener productos seleccionados (checkboxes)
+        productos_seleccionados = request.POST.getlist('productos')
+        
+        if not productos_seleccionados:
+            messages.warning(request, 'Por favor seleccione al menos un producto')
+            return redirect('inicio')
+        
+        # Calcular ruta automáticamente
+        resultado = views_logic.calcular_ruta_automatica(productos_seleccionados)
+        
+        # Preparar contexto para mostrar resultados
+        inventario = views_logic.obtener_inventario_productos()
+        categorias = views_logic.obtener_categorias()
+        
+        context = {
+            'productos': inventario,
+            'categorias': categorias,
+            'ruta_resultado': resultado,
+            'productos_seleccionados': productos_seleccionados,
+        }
+        
+        return render(request, 'inicio.html', context)
+    
+    return redirect('inicio')
 
-def calculate_route(request):
-    start = request.GET.get("start")
-    end = request.GET.get("end")
-    if not start or not end:
-        return HttpResponseBadRequest("Missing 'start' or 'end' parameters")
-    from . import views_logic
-    route = views_logic.calculate_route(start, end)
-    if route:
-        return JsonResponse({"route": route})
-    else:
-        return JsonResponse({"error": "No route found"}, status=404)
+
+def limpiar_seleccion(request):
+    """Limpia la selección de productos y resultados."""
+    views_logic.limpiar_lista_compras()
+    messages.success(request, 'Selección limpiada')
+    return redirect('inicio')
+
+
+def informacion(request):
+    """Vista de información sobre el proyecto."""
+    return render(request, 'informacion.html')

@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información del Proyecto</title>
+    <link rel="stylesheet" href="{% static 'grafos/css/styles.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header-title">Información del Proyecto</h1>
+            <p class="header-subtitle">Sistema de Guía de Compras Inteligente</p>
+        </header>
+
+        <div class="card">
+            <h2 class="card-title">Objetivo</h2>
+            <p>
+                Facilitar al usuario la realización de compras en el menor tiempo posible dentro de 
+                entornos desconocidos, sugiriendo la ruta óptima para localizar cada producto 
+                considerando factores como niveles de congestión.
+            </p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Estructuras de Datos</h2>
+            
+            <h3 class="mt-3">1. Lista Enlazada</h3>
+            <p>
+                Gestiona los productos que el usuario necesita adquirir. Cada producto es un nodo 
+                conectado al siguiente mediante punteros.
+            </p>
+            <p class="text-muted text-small">
+                Operaciones: agregar, eliminar, buscar, recorrer
+            </p>
+
+            <h3 class="mt-3">2. Árbol de Categorías</h3>
+            <p>
+                Representa la organización jerárquica de categorías y productos en la tienda. 
+                Permite búsqueda eficiente y navegación por categorías.
+            </p>
+            <p class="text-muted text-small">
+                Operaciones: buscar, obtener productos, recorrer árbol
+            </p>
+
+            <h3 class="mt-3">3. Grafo de Rutas</h3>
+            <p>
+                Modela las conexiones entre pasillos con pesos dinámicos basados en distancia y 
+                congestión. Utiliza el algoritmo de Dijkstra para encontrar rutas óptimas.
+            </p>
+            <p class="text-muted text-small">
+                Operaciones: ruta más corta, optimizar múltiples destinos, actualizar congestión
+            </p>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Integración</h2>
+            <p>
+                El sistema integra las tres estructuras de datos en un proceso unificado:
+            </p>
+            <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                <li>El usuario agrega productos a su lista de compras (Lista Enlazada)</li>
+                <li>El sistema busca cada producto en el árbol de categorías</li>
+                <li>Se identifican los pasillos donde se encuentran los productos</li>
+                <li>El grafo calcula la ruta óptima para visitar todos los pasillos</li>
+                <li>Se considera el nivel de congestión para optimizar el tiempo</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title">Tecnologías</h2>
+            <ul style="margin-left: 1.5rem; line-height: 1.8;">
+                <li><strong>Backend:</strong> Django 5.2.8 (Python)</li>
+                <li><strong>Frontend:</strong> HTML5, CSS3</li>
+                <li><strong>Base de Datos:</strong> SQLite</li>
+                <li><strong>Estructuras de Datos:</strong> Implementación manual en Python</li>
+            </ul>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'inicio' %}" class="btn btn-primary">Volver a la Aplicación</a>
+        </div>
+    </div>
+</body>
+</html>

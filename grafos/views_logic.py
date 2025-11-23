@@ -1,145 +1,267 @@
-from .graph_data_structures.linked_list import LinkedList
-from .graph_data_structures.category_tree import CategoryNode
-from .graph_data_structures.store_graph import Graph
+from .data_estructura.linked_list import ListaEnlazada
+from .data_estructura.category_tree import NodoCategoria
+from .data_estructura.store_graph import Grafo
 
-product_list = LinkedList()
 
-def build_category_tree():
-    root = CategoryNode("Root - Árbol de Categorías")
+# Instancias globales de las estructuras de datos
+lista_compras = ListaEnlazada()
+grafo_tienda = Grafo()
 
-    lacteos = CategoryNode("Lácteos")
-    queso = CategoryNode("Queso Alpina")
-    queso.add_child(CategoryNode("Marca: Alpina"))
-    queso.add_child(CategoryNode("Tipo: Fresco"))
-    queso.add_child(CategoryNode("Presentación: 250g"))
-    lacteos.add_child(queso)
 
-    yogur = CategoryNode("Yogur Griego Colanta")
-    yogur.add_child(CategoryNode("Marca: Colanta"))
-    yogur.add_child(CategoryNode("Tipo: Griego"))
-    yogur.add_child(CategoryNode("Presentación: 200g"))
-    lacteos.add_child(yogur)
+# ==================== INVENTARIO DE PRODUCTOS ====================
 
-    leche = CategoryNode("Leche Alquería")
-    leche.add_child(CategoryNode("Marca: Alquería"))
-    leche.add_child(CategoryNode("Tipo: Entera"))
-    leche.add_child(CategoryNode("Presentación: 1L"))
-    lacteos.add_child(leche)
+def obtener_inventario_productos():
+    """
+    Retorna el inventario completo de productos disponibles en la tienda.
+    Cada producto incluye: nombre, marca, tipo, presentación, categoría, pasillo.
+    """
+    return [
+        # Pasillo 1 - Lácteos
+        {'nombre': 'Leche Alquería', 'marca': 'Alquería', 'tipo': 'Entera', 'presentacion': '1L', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
+        {'nombre': 'Queso Alpina', 'marca': 'Alpina', 'tipo': 'Fresco', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
+        {'nombre': 'Yogur Colanta', 'marca': 'Colanta', 'tipo': 'Griego', 'presentacion': '200g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
+        {'nombre': 'Mantequilla Alpina', 'marca': 'Alpina', 'tipo': 'Con Sal', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
+        
+        # Pasillo 2 - Aseo
+        {'nombre': 'Jabón Dove', 'marca': 'Dove', 'tipo': 'Corporal', 'presentacion': '90g', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
+        {'nombre': 'Shampoo Pantene', 'marca': 'Pantene', 'tipo': 'Control Caída', 'presentacion': '400ml', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
+        {'nombre': 'Detergente Ariel', 'marca': 'Ariel', 'tipo': 'Líquido', 'presentacion': '2L', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
+        {'nombre': 'Crema Dental Colgate', 'marca': 'Colgate', 'tipo': 'Triple Acción', 'presentacion': '100ml', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
+        
+        # Pasillo 3 - Granos
+        {'nombre': 'Arroz Diana', 'marca': 'Diana', 'tipo': 'Extra', 'presentacion': '1kg', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
+        {'nombre': 'Frijol Rojo', 'marca': 'La Moderna', 'tipo': 'Rojo', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
+        {'nombre': 'Lentejas', 'marca': 'Cosecha Roja', 'tipo': 'Premium', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
+        {'nombre': 'Pasta Doria', 'marca': 'Doria', 'tipo': 'Espagueti', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
+        
+        # Pasillo 4 - Bebidas
+        {'nombre': 'Coca Cola', 'marca': 'Coca Cola', 'tipo': 'Original', 'presentacion': '2L', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
+        {'nombre': 'Jugo Hit', 'marca': 'Hit', 'tipo': 'Mora', 'presentacion': '1L', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
+        {'nombre': 'Agua Cristal', 'marca': 'Cristal', 'tipo': 'Natural', 'presentacion': '600ml', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
+        {'nombre': 'Té Hatsu', 'marca': 'Hatsu', 'tipo': 'Verde', 'presentacion': '500ml', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
+        
+        # Pasillo 5 - Snacks
+        {'nombre': 'Papas Margarita', 'marca': 'Margarita', 'tipo': 'Natural', 'presentacion': '150g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
+        {'nombre': 'Chocolate Jet', 'marca': 'Jet', 'tipo': 'Leche', 'presentacion': '35g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
+        {'nombre': 'Galletas Festival', 'marca': 'Festival', 'tipo': 'Chocolate', 'presentacion': '200g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
+        {'nombre': 'Maní Toddy', 'marca': 'Toddy', 'tipo': 'Salado', 'presentacion': '100g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
+        
+        # Pasillo 6 - Panadería
+        {'nombre': 'Pan Bimbo', 'marca': 'Bimbo', 'tipo': 'Integral', 'presentacion': '450g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
+        {'nombre': 'Pan Integral', 'marca': 'Super Ricas', 'tipo': 'Integral', 'presentacion': '500g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
+        {'nombre': 'Tostadas Doria', 'marca': 'Doria', 'tipo': 'Tradicional', 'presentacion': '300g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
+    ]
 
-    root.add_child(lacteos)
 
-    aseo = CategoryNode("Aseo")
-    jabon = CategoryNode("Jabón Dove")
-    jabon.add_child(CategoryNode("Marca: Dove"))
-    jabon.add_child(CategoryNode("Tipo: Corporal"))
-    jabon.add_child(CategoryNode("Presentación: Barra"))
-    aseo.add_child(jabon)
+def construir_arbol_categorias():
+    """
+    Construye y retorna el árbol de categorías basado en el inventario.
+    """
+    raiz = NodoCategoria("Tienda")
+    inventario = obtener_inventario_productos()
+    
+    # Agrupar por categoría
+    categorias = {}
+    for producto in inventario:
+        cat = producto['categoria']
+        if cat not in categorias:
+            categorias[cat] = []
+        categorias[cat].append(producto)
+    
+    # Construir árbol
+    for categoria, productos in categorias.items():
+        pasillo = productos[0]['pasillo']
+        nodo_categoria = NodoCategoria(categoria, pasillo=pasillo)
+        
+        for prod in productos:
+            nodo_producto = NodoCategoria(
+                prod['nombre'],
+                pasillo=prod['pasillo'],
+                es_producto=True
+            )
+            nodo_categoria.agregar_hijo(nodo_producto)
+        
+        raiz.agregar_hijo(nodo_categoria)
+    
+    return raiz
 
-    shampoo = CategoryNode("Shampoo Pantene")
-    shampoo.add_child(CategoryNode("Marca: Pantene"))
-    shampoo.add_child(CategoryNode("Tipo: Control Caída"))
-    shampoo.add_child(CategoryNode("Presentación: 400ml"))
-    aseo.add_child(shampoo)
 
-    detergente = CategoryNode("Detergente Ariel")
-    detergente.add_child(CategoryNode("Marca: Ariel"))
-    detergente.add_child(CategoryNode("Tipo: Líquido"))
-    detergente.add_child(CategoryNode("Presentación: 2L"))
-    aseo.add_child(detergente)
+def construir_grafo_tienda():
+    """
+    Construye y configura el grafo de la tienda con pasillos y conexiones.
+    """
+    global grafo_tienda
+    grafo_tienda = Grafo()
+    
+    pasillos = {
+        "Entrada": 0.3,
+        "Pasillo 1": 0.2,
+        "Pasillo 2": 0.4,
+        "Pasillo 3": 0.1,
+        "Pasillo 4": 0.3,
+        "Pasillo 5": 0.5,
+        "Pasillo 6": 0.2,
+        "Caja": 0.6,
+    }
+    
+    for pasillo, congestion in pasillos.items():
+        grafo_tienda.agregar_nodo(pasillo, congestion)
+    
+    conexiones = [
+        ("Entrada", "Pasillo 1", 1),
+        ("Entrada", "Pasillo 4", 2),
+        ("Pasillo 1", "Pasillo 2", 1),
+        ("Pasillo 2", "Pasillo 3", 1),
+        ("Pasillo 3", "Pasillo 4", 2),
+        ("Pasillo 4", "Pasillo 5", 1),
+        ("Pasillo 5", "Pasillo 6", 1),
+        ("Pasillo 1", "Pasillo 3", 2),
+        ("Pasillo 2", "Pasillo 5", 3),
+        ("Pasillo 3", "Pasillo 6", 2),
+        ("Pasillo 6", "Caja", 1),
+        ("Pasillo 4", "Caja", 2),
+    ]
+    
+    for desde, hacia, peso in conexiones:
+        grafo_tienda.agregar_arista(desde, hacia, peso)
 
-    root.add_child(aseo)
 
-    granos = CategoryNode("Granos")
-    arroz = CategoryNode("Arroz Diana")
-    arroz.add_child(CategoryNode("Marca: Diana"))
-    arroz.add_child(CategoryNode("Tipo: Extra"))
-    arroz.add_child(CategoryNode("Presentación: 1kg"))
-    granos.add_child(arroz)
+# ==================== OPERACIONES DE LISTA ====================
 
-    frijol = CategoryNode("Frijol Rojo La Moderna")
-    frijol.add_child(CategoryNode("Marca: La Moderna"))
-    frijol.add_child(CategoryNode("Tipo: Rojo"))
-    frijol.add_child(CategoryNode("Presentación: 500g"))
-    granos.add_child(frijol)
+def agregar_productos_a_lista(nombres_productos):
+    """
+    Agrega múltiples productos a la lista de compras desde el inventario.
+    
+    Args:
+        nombres_productos: Lista de nombres de productos a agregar
+    """
+    inventario = obtener_inventario_productos()
+    lista_compras.limpiar()  # Limpiar lista anterior
+    
+    for nombre in nombres_productos:
+        # Buscar producto en inventario
+        producto = next((p for p in inventario if p['nombre'] == nombre), None)
+        if producto:
+            lista_compras.agregar_producto(producto)
 
-    lentejas = CategoryNode("Lentejas Cosecha Roja")
-    lentejas.add_child(CategoryNode("Marca: Cosecha Roja"))
-    lentejas.add_child(CategoryNode("Tipo: Premium"))
-    lentejas.add_child(CategoryNode("Presentación: 500g"))
-    granos.add_child(lentejas)
 
-    root.add_child(granos)
+def limpiar_lista_compras():
+    """Elimina todos los productos de la lista."""
+    lista_compras.limpiar()
 
-    ropa = CategoryNode("Ropa")
-    camiseta = CategoryNode("Camiseta Adidas Hombre")
-    camiseta.add_child(CategoryNode("Marca: Adidas"))
-    camiseta.add_child(CategoryNode("Tipo: Hombre"))
-    camiseta.add_child(CategoryNode("Talla: M"))
-    ropa.add_child(camiseta)
 
-    pantalon = CategoryNode("Pantalón Nike Dama")
-    pantalon.add_child(CategoryNode("Marca: Nike"))
-    pantalon.add_child(CategoryNode("Tipo: Dama"))
-    pantalon.add_child(CategoryNode("Talla: S"))
-    ropa.add_child(pantalon)
+def obtener_productos_seleccionados():
+    """Retorna los productos actualmente en la lista de compras."""
+    return lista_compras.recorrer()
 
-    zapatos = CategoryNode("Zapatos Puma Running")
-    zapatos.add_child(CategoryNode("Marca: Puma"))
-    zapatos.add_child(CategoryNode("Tipo: Running"))
-    zapatos.add_child(CategoryNode("Talla: 40"))
-    ropa.add_child(zapatos)
 
-    root.add_child(ropa)
+# ==================== INTEGRACIÓN SIMPLIFICADA ====================
 
-    electro = CategoryNode("Electrodomésticos")
-    televisor = CategoryNode("Televisor Samsung 55p")
-    televisor.add_child(CategoryNode("Marca: Samsung"))
-    televisor.add_child(CategoryNode("Tipo: LED"))
-    televisor.add_child(CategoryNode("Modelo: 55p"))
-    electro.add_child(televisor)
+def calcular_ruta_automatica(nombres_productos):
+    """
+    Calcula automáticamente la ruta óptima para los productos seleccionados.
+    Siempre inicia en "Entrada" y termina en "Caja".
+    
+    Args:
+        nombres_productos: Lista de nombres de productos seleccionados
+    
+    Returns:
+        dict: Resultado con ruta, productos por pasillo, y costo
+    """
+    # Agregar productos a la lista
+    agregar_productos_a_lista(nombres_productos)
+    
+    # Construir estructuras de datos
+    construir_grafo_tienda()
+    arbol = construir_arbol_categorias()
+    productos = obtener_productos_seleccionados()
+    
+    if not productos:
+        return {
+            'productos': [],
+            'pasillos_necesarios': [],
+            'ruta_optima': [],
+            'costo_total': 0,
+            'productos_por_pasillo': {},
+            'mensaje': 'No hay productos seleccionados'
+        }
+    
+    # Mapear productos a pasillos usando el árbol
+    pasillos_necesarios = []
+    productos_por_pasillo = {}
+    
+    for producto in productos:
+        nombre = producto.get('nombre', '')
+        nodo = arbol.buscar_categoria(nombre)
+        
+        if nodo and nodo.pasillo:
+            pasillo = nodo.pasillo
+            if pasillo not in pasillos_necesarios:
+                pasillos_necesarios.append(pasillo)
+            
+            if pasillo not in productos_por_pasillo:
+                productos_por_pasillo[pasillo] = []
+            productos_por_pasillo[pasillo].append(producto)
+    
+    # Calcular ruta óptima (siempre desde Entrada)
+    if pasillos_necesarios:
+        ruta_optima, costo_total = grafo_tienda.calcular_ruta_optima(
+            pasillos_necesarios,
+            inicio="Entrada"
+        )
+        
+        # Siempre terminar en Caja
+        if ruta_optima and ruta_optima[-1] != "Caja":
+            ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ruta_optima[-1], "Caja")
+            if ruta_a_caja:
+                ruta_optima.extend(ruta_a_caja[1:])
+                costo_total += costo_caja
+    else:
+        ruta_optima = ["Entrada", "Caja"]
+        costo_total = 0
+    
+    return {
+        'productos': productos,
+        'pasillos_necesarios': pasillos_necesarios,
+        'ruta_optima': ruta_optima,
+        'costo_total': round(costo_total, 2),
+        'productos_por_pasillo': productos_por_pasillo,
+    }
 
-    microondas = CategoryNode("Microondas Haceb 20L")
-    microondas.add_child(CategoryNode("Marca: Haceb"))
-    microondas.add_child(CategoryNode("Tipo: Digital"))
-    microondas.add_child(CategoryNode("Capacidad: 20L"))
-    electro.add_child(microondas)
 
-    lavadora = CategoryNode("Lavadora LG 18kg")
-    lavadora.add_child(CategoryNode("Marca: LG"))
-    lavadora.add_child(CategoryNode("Tipo: Carga Superior"))
-    lavadora.add_child(CategoryNode("Capacidad: 18kg"))
-    electro.add_child(lavadora)
+# ==================== BÚSQUEDA Y FILTRADO ====================
 
-    root.add_child(electro)
+def buscar_productos(termino):
+    """
+    Busca productos en el inventario que coincidan con el término.
+    
+    Args:
+        termino: Texto a buscar (busca en nombre, marca, categoría)
+    
+    Returns:
+        list: Productos que coinciden con la búsqueda
+    """
+    if not termino:
+        return obtener_inventario_productos()
+    
+    termino = termino.lower()
+    inventario = obtener_inventario_productos()
+    
+    return [
+        p for p in inventario
+        if termino in p['nombre'].lower()
+        or termino in p['marca'].lower()
+        or termino in p['categoria'].lower()
+    ]
 
-    return root
 
-store_graph = Graph()
+def obtener_productos_por_categoria(categoria):
+    """Retorna todos los productos de una categoría específica."""
+    inventario = obtener_inventario_productos()
+    return [p for p in inventario if p['categoria'] == categoria]
 
-def build_store_graph():
-    aisles = ["Pasillo 1", "Pasillo 2", "Pasillo 3", "Pasillo 4", "Pasillo 5", "Pasillo 6"]
-    for aisle in aisles:
-        store_graph.add_node(aisle)
-    store_graph.add_edge("Pasillo 1", "Pasillo 2")
-    store_graph.add_edge("Pasillo 2", "Pasillo 3")
-    store_graph.add_edge("Pasillo 3", "Pasillo 4")
-    store_graph.add_edge("Pasillo 4", "Pasillo 5")
-    store_graph.add_edge("Pasillo 5", "Pasillo 6")
-    store_graph.add_edge("Pasillo 1", "Pasillo 3")
-    store_graph.add_edge("Pasillo 2", "Pasillo 5")
-    store_graph.add_edge("Pasillo 4", "Pasillo 6")
-    store_graph.add_edge("Pasillo 3", "Pasillo 6")
 
-def add_product_to_list(product_obj):
-    product_list.add_product(product_obj)
-
-def get_all_products():
-    return product_list.traverse()
-
-def find_category_node(category_name):
-    root = build_category_tree()
-    return root.find_category(category_name)
-
-def calculate_route(start, end):
-    build_store_graph()
-    return store_graph.shortest_path(start, end)
+def obtener_categorias():
+    """Retorna lista de todas las categorías disponibles."""
+    inventario = obtener_inventario_productos()
+    return list(set(p['categoria'] for p in inventario))
