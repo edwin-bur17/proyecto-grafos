@@ -39,13 +39,15 @@ def calcular_ruta(request):
     if request.method == 'POST':
         # Obtener productos seleccionados (checkboxes)
         productos_seleccionados = request.POST.getlist('productos')
+        # Obtener pasillo de inicio si está disponible (por ejemplo, de un campo en el formulario)
+        pasillo_inicio = request.POST.get('pasillo_inicio', 'Entrada')
         
         if not productos_seleccionados:
             messages.warning(request, 'Por favor seleccione al menos un producto')
             return redirect('inicio')
         
-        # Calcular ruta automáticamente
-        resultado = views_logic.calcular_ruta_automatica(productos_seleccionados)
+        # Calcular ruta automáticamente pasando pasillo inicio
+        resultado = views_logic.calcular_ruta_automatica(productos_seleccionados, pasillo_inicio=pasillo_inicio)
         
         # Preparar contexto para mostrar resultados
         inventario = views_logic.obtener_inventario_productos()
@@ -56,6 +58,7 @@ def calcular_ruta(request):
             'categorias': categorias,
             'ruta_resultado': resultado,
             'productos_seleccionados': productos_seleccionados,
+            'pasillo_inicio': pasillo_inicio,
         }
         
         return render(request, 'inicio.html', context)

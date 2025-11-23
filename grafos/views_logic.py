@@ -50,6 +50,16 @@ def obtener_inventario_productos():
         {'nombre': 'Pan Bimbo', 'marca': 'Bimbo', 'tipo': 'Integral', 'presentacion': '450g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
         {'nombre': 'Pan Integral', 'marca': 'Super Ricas', 'tipo': 'Integral', 'presentacion': '500g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
         {'nombre': 'Tostadas Doria', 'marca': 'Doria', 'tipo': 'Tradicional', 'presentacion': '300g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
+
+        # Pasillo 7 - Ropa
+        {'nombre': 'Camiseta Adidas Hombre', 'marca': 'Adidas', 'tipo': 'Hombre', 'presentacion': 'M', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
+        {'nombre': 'Pantalón Nike Dama', 'marca': 'Nike', 'tipo': 'Dama', 'presentacion': 'S', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
+        {'nombre': 'Zapatos Puma Running', 'marca': 'Puma', 'tipo': 'Running', 'presentacion': '40', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
+
+        # Pasillo 8 - Electrodomésticos
+        {'nombre': 'Televisor Samsung 55p', 'marca': 'Samsung', 'tipo': 'LED', 'presentacion': '55p', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
+        {'nombre': 'Microondas Haceb 20L', 'marca': 'Haceb', 'tipo': 'Digital', 'presentacion': '20L', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
+        {'nombre': 'Lavadora LG 18kg', 'marca': 'LG', 'tipo': 'Carga Superior', 'presentacion': '18kg', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
     ]
 
 
@@ -101,6 +111,8 @@ def construir_grafo_tienda():
         "Pasillo 4": 0.3,
         "Pasillo 5": 0.5,
         "Pasillo 6": 0.2,
+        "Pasillo 7": 0.4,
+        "Pasillo 8": 0.5,
         "Caja": 0.6,
     }
     
@@ -120,6 +132,8 @@ def construir_grafo_tienda():
         ("Pasillo 3", "Pasillo 6", 2),
         ("Pasillo 6", "Caja", 1),
         ("Pasillo 4", "Caja", 2),
+        ("Pasillo 7", "Caja", 3),
+        ("Pasillo 8", "Caja", 3),
     ]
     
     for desde, hacia, peso in conexiones:
@@ -157,13 +171,14 @@ def obtener_productos_seleccionados():
 
 # ==================== INTEGRACIÓN SIMPLIFICADA ====================
 
-def calcular_ruta_automatica(nombres_productos):
+def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
     """
     Calcula automáticamente la ruta óptima para los productos seleccionados.
     Siempre inicia en "Entrada" y termina en "Caja".
     
     Args:
         nombres_productos: Lista de nombres de productos seleccionados
+        pasillo_inicio: Pasillo donde inicia el usuario (por defecto: "Entrada")
     
     Returns:
         dict: Resultado con ruta, productos por pasillo, y costo
@@ -203,11 +218,11 @@ def calcular_ruta_automatica(nombres_productos):
                 productos_por_pasillo[pasillo] = []
             productos_por_pasillo[pasillo].append(producto)
     
-    # Calcular ruta óptima (siempre desde Entrada)
+    # Calcular ruta óptima (usando pasillo_inicio)
     if pasillos_necesarios:
         ruta_optima, costo_total = grafo_tienda.calcular_ruta_optima(
             pasillos_necesarios,
-            inicio="Entrada"
+            inicio=pasillo_inicio
         )
         
         # Siempre terminar en Caja
@@ -217,7 +232,7 @@ def calcular_ruta_automatica(nombres_productos):
                 ruta_optima.extend(ruta_a_caja[1:])
                 costo_total += costo_caja
     else:
-        ruta_optima = ["Entrada", "Caja"]
+        ruta_optima = [pasillo_inicio, "Caja"] if pasillo_inicio != "Caja" else ["Caja"]
         costo_total = 0
     
     return {
