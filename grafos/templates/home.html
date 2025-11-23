@@ -1,15 +1,203 @@
-{% extends "layout.html" %}
-{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guía Centro Comercial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f7f8;
+      color: #333;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    .section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input, select, button {
+      padding: 8px;
+      margin-top: 4px;
+      width: 100%;
+      max-width: 300px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      cursor: pointer;
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      margin-top: 15px;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    ul {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 5px;
+    }
+    .message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Guía para encontrar productos</h1>
 
-{% block title %}Bienvenido{% endblock %}
+  <div class="section" id="product-section">
+    <h2>Añadir producto</h2>
+    <form id="addProductForm">
+      <label for="prodName">Nombre:</label>
+      <input type="text" id="prodName" required />
+      <label for="prodBrand">Marca:</label>
+      <input type="text" id="prodBrand" required />
+      <label for="prodType">Tipo:</label>
+      <input type="text" id="prodType" required />
+      <label for="prodPresentation">Presentación:</label>
+      <input type="text" id="prodPresentation" required />
+      <button type="submit">Añadir Producto</button>
+    </form>
+    <div id="addProductMsg" class="message"></div>
+  </div>
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'grafos/css/home.css' %}">
-{% endblock %}
+  <div class="section" id="list-products-section">
+    <h2>Lista de productos</h2>
+    <button id="loadProductsBtn">Cargar Productos</button>
+    <ul id="productList"></ul>
+  </div>
 
-{% block content %}
-<h1>Bienvenido al Proyecto de Grafos</h1>
-<p>Este proyecto demostrará diferentes funcionalidades y visualizaciones.</p>
+  <div class="section" id="category-search-section">
+    <h2>Buscar categoría</h2>
+    <label for="categoryName">Nombre de categoría:</label>
+    <input type="text" id="categoryName" />
+    <button id="searchCategoryBtn">Buscar</button>
+    <div id="categoryResult"></div>
+  </div>
 
-<a href="{% url 'info' %}" class="btn">Ir a información</a>
-{% endblock %}
+  <div class="section" id="route-section">
+    <h2>Calcular ruta óptima</h2>
+    <label for="routeStart">Pasillo inicio:</label>
+    <select id="routeStart">
+      <option value="">Seleccione</option>
+      <option value="Pasillo 1">Pasillo 1</option>
+      <option value="Pasillo 2">Pasillo 2</option>
+      <option value="Pasillo 3">Pasillo 3</option>
+      <option value="Pasillo 4">Pasillo 4</option>
+      <option value="Pasillo 5">Pasillo 5</option>
+      <option value="Pasillo 6">Pasillo 6</option>
+    </select>
+
+    <label for="routeEnd">Pasillo destino:</label>
+    <select id="routeEnd">
+      <option value="">Seleccione</option>
+      <option value="Pasillo 1">Pasillo 1</option>
+      <option value="Pasillo 2">Pasillo 2</option>
+      <option value="Pasillo 3">Pasillo 3</option>
+      <option value="Pasillo 4">Pasillo 4</option>
+      <option value="Pasillo 5">Pasillo 5</option>
+      <option value="Pasillo 6">Pasillo 6</option>
+    </select>
+
+    <button id="calculateRouteBtn">Calcular Ruta</button>
+    <div id="routeResult"></div>
+  </div>
+
+<script>
+  document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('prodName').value.trim();
+    const brand = document.getElementById('prodBrand').value.trim();
+    const type = document.getElementById('prodType').value.trim();
+    const presentation = document.getElementById('prodPresentation').value.trim();
+
+    const resp = await fetch('/add_product/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, brand, product_type: type, presentation })
+    });
+    const data = await resp.json();
+    const msgDiv = document.getElementById('addProductMsg');
+    if (data.message) {
+      msgDiv.textContent = data.message;
+      msgDiv.classList.remove('error');
+
+      // Limpiar formulario
+      this.reset();
+    } else {
+      msgDiv.textContent = data.error || 'Error añadiendo producto.';
+      msgDiv.classList.add('error');
+    }
+  });
+
+  document.getElementById('loadProductsBtn').addEventListener('click', async function() {
+    const resp = await fetch('/list_products/');
+    const data = await resp.json();
+    const list = document.getElementById('productList');
+    list.innerHTML = '';
+    data.products.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = `${p.name} - ${p.brand} - ${p.product_type} - ${p.presentation}`;
+      list.appendChild(li);
+    });
+  });
+
+  document.getElementById('searchCategoryBtn').addEventListener('click', async function() {
+    const name = document.getElementById('categoryName').value.trim();
+    if (!name) {
+      alert('Ingrese un nombre de categoría.');
+      return;
+    }
+    const resp = await fetch(`/search_category/?name=${encodeURIComponent(name)}`);
+    const data = await resp.json();
+    const div = document.getElementById('categoryResult');
+    if (data.error) {
+      div.textContent = data.error;
+      div.classList.add('error');
+    } else {
+      div.classList.remove('error');
+      div.textContent = `Categoría: ${data.category}\nHijos:\n- ${data.children.join('\n- ')}`;
+    }
+  });
+
+  document.getElementById('calculateRouteBtn').addEventListener('click', async function() {
+    const start = document.getElementById('routeStart').value;
+    const end = document.getElementById('routeEnd').value;
+    const div = document.getElementById('routeResult');
+    if (!start || !end) {
+      alert('Seleccione pasillos de inicio y destino.');
+      return;
+    }
+    const resp = await fetch(`/calculate_route/?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`);
+    const data = await resp.json();
+    if (data.error) {
+      div.textContent = data.error;
+      div.classList.add('error');
+    } else {
+      div.classList.remove('error');
+      div.textContent = "Ruta óptima:\n" + data.route.join(" -> ");
+    }
+  });
+</script>
+</body>
+</html>
