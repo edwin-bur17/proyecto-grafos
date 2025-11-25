@@ -14,12 +14,22 @@ def inicio(request):
     termino_busqueda = request.GET.get('buscar', '')
     categoria_filtro = request.GET.get('categoria', '')
     
+    # 1. Obtener inventario base
+    productos = inventario
+    
+    # 2. Filtrar por categoría si existe
+    if categoria_filtro:
+        productos = [p for p in productos if p['categoria'] == categoria_filtro]
+        
+    # 3. Filtrar por búsqueda si existe
     if termino_busqueda:
-        productos = views_logic.buscar_productos(termino_busqueda)
-    elif categoria_filtro:
-        productos = views_logic.obtener_productos_por_categoria(categoria_filtro)
-    else:
-        productos = inventario
+        termino = termino_busqueda.lower()
+        productos = [
+            p for p in productos
+            if termino in p['nombre'].lower()
+            or termino in p['marca'].lower()
+            or termino in p['categoria'].lower()
+        ]
     
     # Obtener productos seleccionados desde la sesión
     productos_seleccionados = request.session.get('productos_seleccionados', [])

@@ -26,6 +26,36 @@
         </div>
         {% endif %}
 
+        <!-- Formulario de Búsqueda y Filtros (separado) -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <form method="get" action="{% url 'inicio' %}" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
+                <div style="flex: 1; display: flex; gap: 0.5rem;">
+                    <input type="text" 
+                           id="search-input"
+                           name="buscar" 
+                           class="form-input" 
+                           placeholder="Buscar productos..."
+                           value="{{ termino_busqueda }}"
+                           style="margin-bottom: 0;">
+                    <button type="submit" class="btn btn-primary" style="width: auto; margin-bottom: 0;">Buscar</button>
+                    {% if termino_busqueda or categoria_filtro %}
+                    <a href="{% url 'inicio' %}" class="btn btn-danger" style="width: auto; margin-bottom: 0; text-decoration: none; display: inline-block; line-height: 38px;">Limpiar</a>
+                    {% endif %}
+                </div>
+                <div style="width: 200px;">
+                    <select name="categoria" class="form-select" onchange="this.form.submit()" style="margin-bottom: 0;">
+                        <option value="">Todas las categorías</option>
+                        {% for categoria in categorias %}
+                        <option value="{{ categoria }}" {% if categoria == categoria_filtro %}selected{% endif %}>
+                            {{ categoria }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Formulario de Selección de Productos -->
         <form method="post" action="{% url 'calcular_ruta' %}">
             {% csrf_token %}
             
@@ -33,38 +63,6 @@
                 <!-- PANEL IZQUIERDO: Selección de Productos -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <h2 class="card-title">Seleccione sus Productos</h2>
-                    
-                    <!-- Filtros -->
-                    <div class="form-group">
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                            <div style="flex: 1;">
-                                <form method="get" action="{% url 'inicio' %}" style="display: flex; gap: 0.5rem;">
-                                    <input type="text" 
-                                           name="buscar" 
-                                           class="form-input" 
-                                           placeholder="Buscar productos..."
-                                           value="{{ termino_busqueda }}"
-                                           style="margin-bottom: 0;">
-                                    <button type="submit" class="btn btn-primary" style="width: auto; margin-bottom: 0;">Buscar</button>
-                                    {% if termino_busqueda or categoria_filtro %}
-                                    <a href="{% url 'inicio' %}" class="btn btn-danger" style="width: auto; margin-bottom: 0; text-decoration: none; display: inline-block;">Limpiar</a>
-                                    {% endif %}
-                                </form>
-                            </div>
-                            <div style="width: 200px;">
-                                <form method="get" action="{% url 'inicio' %}">
-                                    <select name="categoria" class="form-select" onchange="this.form.submit()" style="margin-bottom: 0;">
-                                        <option value="">Todas las categorías</option>
-                                        {% for categoria in categorias %}
-                                        <option value="{{ categoria }}" {% if categoria == categoria_filtro %}selected{% endif %}>
-                                            {{ categoria }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Lista de Productos con Checkboxes -->
                     <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: var(--border-radius); padding: 1rem;">

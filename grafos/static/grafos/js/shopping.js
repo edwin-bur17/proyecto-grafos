@@ -99,11 +99,21 @@ function initializeShoppingCart() {
     });
   }
 
-  // Handler para sincronizar selecciones antes de enviar el formulario
-  const form = document.querySelector('form[action*="calcular_ruta"]');
-  if (form) {
-    form.addEventListener("submit", function () {
+  // Handler para sincronizar selecciones antes de enviar el formulario de ruta
+  const routeForm = document.querySelector('form[action*="calcular_ruta"]');
+  if (routeForm) {
+    routeForm.addEventListener("submit", function () {
       // Actualizar sessionStorage antes de enviar
+      const selections = getCurrentSelections();
+      saveSelections(selections);
+    });
+  }
+
+  // Handler para sincronizar selecciones antes de aplicar filtros/búsqueda
+  const searchForm = document.querySelector('form[action*="inicio"]');
+  if (searchForm) {
+    searchForm.addEventListener("submit", function () {
+      // Guardar selecciones actuales antes de filtrar
       const selections = getCurrentSelections();
       saveSelections(selections);
     });
