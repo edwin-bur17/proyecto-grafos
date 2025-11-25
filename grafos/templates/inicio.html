@@ -26,6 +26,16 @@
         </div>
         {% endif %}
 
+        {% if modo_agregar %}
+        <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 1.5rem; border: none;">
+            <h3 style="margin: 0 0 0.5rem 0; color: white;">🔄 Modo: Agregar Productos a Ruta Existente</h3>
+            <p style="margin: 0; opacity: 0.95;">
+                Tienes <strong>{{ num_productos_en_ruta }} producto{{ num_productos_en_ruta|pluralize }}</strong> en tu ruta actual.
+                Selecciona productos adicionales y haz clic en "Recalcular Ruta" para actualizar tu ruta óptima.
+            </p>
+        </div>
+        {% endif %}
+
         <!-- Formulario de Búsqueda y Filtros (separado) -->
         <div class="card" style="margin-bottom: 1.5rem;">
             <form method="get" action="{% url 'inicio' %}" style="display: flex; gap: 1rem; align-items: center; width: 100%;">
@@ -106,7 +116,11 @@
 
                     <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
                         <button type="submit" class="btn btn-success btn-block">
-                            Calcular Ruta Óptima
+                            {% if modo_agregar %}
+                                🔄 Recalcular Ruta con Nuevos Productos
+                            {% else %}
+                                Calcular Ruta Óptima
+                            {% endif %}
                         </button>
                         <a href="{% url 'limpiar_seleccion' %}" class="btn btn-danger" style="width: auto; text-decoration: none;">
                             Limpiar Selección
@@ -127,5 +141,38 @@
             </div>
         </div>
     </div>
+    <!-- Script de Sincronización para Modo Agregar -->
+    <!-- Script de Sincronización para Modo Agregar -->
+    {% if modo_agregar %}
+    {{ productos_seleccionados|json_script:"server-selections-data" }}
+    <script>
+        (function() {
+            try {
+                // Sincronizar sessionStorage con los datos reales del servidor
+                // Esto corrige el bug donde productos eliminados reaparecían
+                const serverSelections = JSON.parse(document.getElementById('server-selections-data').textContent);
+                
+                console.log("Sincronizando selecciones desde servidor:", serverSelections);
+                sessionStorage.setItem("productos_seleccionados", JSON.stringify(serverSelections));
+                
+                // Forzar actualización visual inmediata de checkboxes si ya se renderizaron
+                const updateCheckboxes = () => {
+                    const checkboxes = document.querySelectorAll('input[name="productos"]');
+                    checkboxes.forEach(cb => {
+                        cb.checked = serverSelections.includes(cb.value);
+                    });
+                };
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener("DOMContentLoaded", updateCheckboxes);
+                } else {
+                    updateCheckboxes();
+                }
+            } catch (e) {
+                console.error("Error sincronizando selecciones:", e);
+            }
+        })();
+    </script>
+    {% endif %}
 </body>
 </html>

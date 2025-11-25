@@ -5,147 +5,554 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruta Óptima - Guía de Compras</title>
+    <title>Navegación por Tienda 🗺️</title>
     <link rel="stylesheet" href="{% static 'grafos/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'grafos/css/map-view.css' %}">
     <script src="{% static 'grafos/js/shopping.js' %}" defer></script>
 </head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1 class="header-title">🗺️ Tu Ruta Óptima de Compras</h1>
-            <p class="header-subtitle">Sigue estos pasos para completar tu compra de manera eficiente</p>
-        </header>
-
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="message message-{{ message.tags }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if ruta_resultado %}
-        <div class="grid">
-            <!-- Estadísticas de Ruta -->
-            <div class="card grid-full">
-                <h2 class="card-title">📊 Resumen de tu Compra</h2>
-                
-                <div class="route-stats">
-                    <div class="route-stat-card">
-                        <div class="route-stat-value">{{ ruta_resultado.productos|length }}</div>
-                        <div class="route-stat-label">Productos</div>
-                    </div>
-                    <div class="route-stat-card">
-                        <div class="route-stat-value">{{ ruta_resultado.pasillos_necesarios|length }}</div>
-                        <div class="route-stat-label">Pasillos con Productos</div>
-                    </div>
-                    <div class="route-stat-card">
-                        <div class="route-stat-value">{{ ruta_resultado.ruta_optima|length }}</div>
-                        <div class="route-stat-label">Pasos Totales</div>
-                    </div>
-                    <div class="route-stat-card">
-                        <div class="route-stat-value">{{ ruta_resultado.costo_total }}</div>
-                        <div class="route-stat-label">Costo de Ruta</div>
-                    </div>
-                </div>
+<body class="map-view-body">
+    {% if ruta_resultado %}
+    <!-- Layout tipo Google Maps -->
+    <div class="maps-layout">
+        <!-- Panel Lateral Izquierdo -->
+        <div class="sidebar-panel">
+            <div class="sidebar-header">
+                <h1 class="sidebar-title">🗺️ Tu Ruta de Compras</h1>
+                <p class="sidebar-subtitle">{{ ruta_resultado.productos|length }} productos · {{ ruta_resultado.pasillos_necesarios|length }} pasillos</p>
             </div>
 
-            <!-- Ruta Visual Paso a Paso -->
-            <div class="card grid-full">
-                <h2 class="card-title">📍 Sigue Esta Ruta Paso a Paso</h2>
-                
-                <div class="route-container">
-                    {% for paso in ruta_resultado.ruta_optima %}
-                    <div class="route-step">
-                        {% if forloop.first %}
-                            <!-- Paso inicial: Entrada -->
-                            <div class="route-badge start">
-                                <span class="route-icon">🚪</span>
+            <!-- Búsqueda de productos -->
+            <div class="search-box">
+                <input type="text" id="searchProducts" placeholder="🔍 Buscar productos..." class="search-input">
+            </div>
+
+            <!-- Pestañas: Rutas vs Productos -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="routes">Rutas</button>
+                <button class="tab-btn" data-tab="products">Productos</button>
+            </div>
+
+            <!-- Panel de Rutas -->
+            <div id="tab-routes" class="tab-content active">
+                <div class="routes-list">
+                    {% for ruta in ruta_resultado.rutas %}
+                    <div class="route-card {% if ruta.es_optima %}optimal{% endif %}" 
+                         data-route-id="{{ ruta.id }}"
+                         onclick="seleccionarRuta({{ ruta.id }})">
+                        <div class="route-header">
+                            <span class="route-badge">
+                                {% if ruta.es_optima %}⭐{% else %}{{ forloop.counter }}{% endif %}
+                            </span>
+                            <div class="route-info">
+                                <h3 class="route-title">{{ ruta.nombre }}</h3>
+                                <p class="route-meta">
+                                    <span class="badge badge-blue">{{ ruta.ruta|length }} pasos</span>
+                                    <span class="badge badge-green">Costo: {{ ruta.costo }}</span>
+                                </p>
                             </div>
-                            <div class="route-content">
-                                <div class="route-title">{{ paso }}</div>
-                                <div class="route-description">Punto de inicio - Comienza tu recorrido aquí</div>
-                            </div>
-                        {% elif forloop.last %}
-                            <!-- Paso final: Caja -->
-                            <div class="route-badge finish">
-                                <span class="route-icon">🛒</span>
-                            </div>
-                            <div class="route-content">
-                                <div class="route-title">{{ paso }}</div>
-                                <div class="route-description">Punto final - Realiza tu pago aquí</div>
-                            </div>
-                        {% else %}
-                            <!-- Verificar si es pasillo con productos o de tránsito -->
-                            {% if ruta_resultado.productos_por_pasillo|get_item:paso %}
-                                <!-- Pasillo con productos -->
-                                <div class="route-badge pasillo">
-                                    <span class="route-icon">🛍️</span>
-                                </div>
-                                <div class="route-content">
-                                    <div class="route-title">{{ paso }}</div>
-                                    <div class="route-description">
-                                        <strong>🎯 Recoge aquí:</strong> {{ ruta_resultado.productos_por_pasillo|get_item:paso|length }} producto{{ ruta_resultado.productos_por_pasillo|get_item:paso|length|pluralize }}
-                                    </div>
-                                    <div class="route-products">
-                                        <ul class="route-products-list">
-                                            {% for producto in ruta_resultado.productos_por_pasillo|get_item:paso %}
-                                            <li><strong>{{ producto.nombre }}</strong> - {{ producto.marca }} ({{ producto.presentacion }})</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <!-- Pasillo de tránsito -->
-                                <div class="route-badge transit">
-                                    <span class="route-icon">➡️</span>
-                                </div>
-                                <div class="route-content">
-                                    <div class="route-title">{{ paso }}</div>
-                                    <div class="route-description">Pasillo de tránsito - Solo continúa por aquí</div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
+                        </div>
+                        <div class="route-preview">
+                            {{ ruta.ruta|join:" → " }}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
+
+                <!-- Detalles de la ruta activa -->
+                <div class="route-timeline">
+                    <h3 class="timeline-title">Detalles del Recorrido</h3>
+                    <div id="route-steps-container">
+                        <!-- Se llena dinámicamente con JS -->
+                    </div>
+                </div>
             </div>
 
-            <!-- Acciones -->
-            <div class="card grid-full">
-                <h2 class="card-title">¿Qué quieres hacer?</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                    <a href="{% url 'inicio' %}" class="btn btn-primary btn-block" style="text-decoration: none;">
-                        ← Volver a Seleccionar Productos
-                    </a>
-                    <a href="{% url 'limpiar_seleccion' %}" class="btn btn-danger btn-block" style="text-decoration: none;">
-                        🗑️ Nueva Compra (Limpiar Todo)
-                    </a>
+            <!-- Panel de Productos -->
+            <div id="tab-products" class="tab-content">
+                <div class="products-manager">
+                    <div class="products-count">
+                        <span id="productsCount">{{ ruta_resultado.productos|length }}</span> productos seleccionados
+                    </div>
+                    
+                    <div class="products-grid" id="productsList">
+                        {% for producto in ruta_resultado.productos %}
+                        <div class="product-item" data-product="{{ producto.nombre }}">
+                            <div class="product-info">
+                                <h4 class="product-name">{{ producto.nombre }}</h4>
+                                <p class="product-details">{{ producto.marca }}</p>
+                                <span class="product-location">📍 {{ producto.pasillo }}</span>
+                            </div>
+                            <button class="product-remove" 
+                                    onclick="eliminarProducto('{{ producto.nombre }}')"
+                                    title="Eliminar {{ producto.nombre }} y recalcular ruta">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M12.854 3.146a.5.5 0 0 1 0 .708l-9 9a.5.5 0 0 1-.708-.708l9-9a.5.5 0 0 1 .708 0z"/>
+                                    <path d="M3.146 3.146a.5.5 0 0 0 0 .708l9 9a.5.5 0 0 0 .708-.708l-9-9a.5.5 0 0 0-.708 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="products-actions">
+                        <a href="{% url 'inicio' %}" class="btn-action btn-outline">
+                            ➕ Agregar Más Productos
+                        </a>
+                        <a href="{% url 'limpiar_seleccion' %}" class="btn-action btn-danger" 
+                           onclick="return confirm('¿Deseas limpiar toda la selección?');">
+                            🗑️ Nueva Compra
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-        {% else %}
-        <!-- Si no hay resultados, redirigir a inicio -->
+
+        <!-- Área del Mapa Principal -->
+        <div class="map-area">
+            <!-- Controles superiores -->
+            <div class="map-controls">
+                <div class="control-group">
+                    <button class="control-btn" onclick="zoomIn()" title="Acercar">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn" onclick="zoomOut()" title="Alejar">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M5 9a1 1 0 100 2h10a1 1 0 100-2H5z"/>
+                        </svg>
+                    </button>
+                    <button class="control-btn" onclick="resetView()" title="Centrar">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="route-stats-bar">
+                    <div class="stat">
+                        <span class="stat-label">Distancia</span>
+                        <span class="stat-value" id="routeDistance">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Pasos</span>
+                        <span class="stat-value" id="routeSteps">-</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Productos</span>
+                        <span class="stat-value">{{ ruta_resultado.productos|length }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor del Mapa SVG -->
+            <div class="map-canvas" id="mapCanvas">
+                <svg id="store-map" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <!-- Gradientes -->
+                        <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                        </linearGradient>
+                        
+                        <!-- Sombras -->
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                        
+                        <!-- Marcador de dirección -->
+                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
+                        </marker>
+                    </defs>
+                    
+                    <!-- Fondo de la tienda -->
+                    <rect x="50" y="50" width="1100" height="700" rx="20" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
+                    
+                    <!-- Grid de referencia -->
+                    <g id="grid-lines" opacity="0.1">
+                        <!-- Se genera con JS -->
+                    </g>
+                    
+                    <!-- Conexiones base del grafo -->
+                    <g id="map-connections"></g>
+                    
+                    <!-- Rutas activas -->
+                    <g id="active-routes"></g>
+                    
+                    <!-- Nodos (pasillos) -->
+                    <g id="map-nodes"></g>
+                    
+                    <!-- Labels flotantes -->
+                    <g id="map-labels"></g>
+                </svg>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="map-legend">
+                <h4 style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #2c3e50;">📍 Leyenda</h4>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #28a745;">🚪</span>
+                    <span class="legend-text">Entrada</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #667eea;">📦</span>
+                    <span class="legend-text">Con productos</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #6c757d;">➡️</span>
+                    <span class="legend-text">Paso intermedio</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-icon" style="background: #dc3545;">🛒</span>
+                    <span class="legend-text">Cajas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos del servidor
+        const productosPorPasillo = {{ ruta_resultado.productos_por_pasillo|to_json }};
+        const rutasDisponibles = {{ ruta_resultado.rutas|to_json }};
+        let rutaActiva = null;
+        let zoomLevel = 1;
+
+        // Configuración del mapa con coordenadas mejoradas - Ahora con 4 cajas
+        const nodosMapa = {
+            "Entrada": { x: 600, y: 700, label: "Entrada", type: "start", icon: "🚪" },
+            "Pasillo 1": { x: 300, y: 550, label: "Lácteos", type: "aisle", icon: "🥛" },
+            "Pasillo 2": { x: 300, y: 400, label: "Aseo", type: "aisle", icon: "🧼" },
+            "Pasillo 3": { x: 300, y: 250, label: "Granos", type: "aisle", icon: "🌾" },
+            "Pasillo 4": { x: 900, y: 550, label: "Bebidas", type: "aisle", icon: "🥤" },
+            "Pasillo 5": { x: 900, y: 400, label: "Snacks", type: "aisle", icon: "🍿" },
+            "Pasillo 6": { x: 900, y: 250, label: "Panadería", type: "aisle", icon: "🍞" },
+            "Pasillo 7": { x: 150, y: 100, label: "Ropa", type: "aisle", icon: "👕" },
+            "Pasillo 8": { x: 1050, y: 100, label: "Electro", type: "aisle", icon: "📺" },
+            "Caja 1": { x: 300, y: 100, label: "Caja 1", type: "end", icon: "🛒" },
+            "Caja 2": { x: 900, y: 100, label: "Caja 2", type: "end", icon: "🛒" },
+            "Caja 3": { x: 1000, y: 550, label: "Caja 3", type: "end", icon: "🛒" },
+            "Caja 4": { x: 1050, y: 100, label: "Caja 4", type: "end", icon: "🛒" }
+        };
+
+        const conexionesBase = [
+            // Conexiones de Entrada
+            ["Entrada", "Pasillo 1"], ["Entrada", "Pasillo 4"],
+            // Conexiones entre pasillos - lado izquierdo
+            ["Pasillo 1", "Pasillo 2"], ["Pasillo 2", "Pasillo 3"],
+            ["Pasillo 3", "Pasillo 7"],
+            // Conexiones entre pasillos - lado derecho
+            ["Pasillo 4", "Pasillo 5"], ["Pasillo 5", "Pasillo 6"],
+            ["Pasillo 6", "Pasillo 8"],
+            // Conexiones horizontales
+            ["Pasillo 1", "Pasillo 4"], ["Pasillo 2", "Pasillo 5"],
+            ["Pasillo 3", "Pasillo 6"], ["Pasillo 7", "Pasillo 8"],
+            // Conexiones a las cajas
+            ["Pasillo 3", "Caja 1"], ["Pasillo 7", "Caja 1"],
+            ["Pasillo 6", "Caja 2"], ["Pasillo 4", "Caja 3"],
+            ["Pasillo 8", "Caja 4"],
+            // Conexiones entre cajas
+            ["Caja 1", "Caja 2"], ["Caja 2", "Caja 4"],
+            ["Caja 3", "Caja 4"]
+        ];
+
+        // Inicializar mapa
+        function inicializarMapa() {
+            dibujarGrid();
+            dibujarConexiones();
+            dibujarNodos();
+            
+            // Seleccionar primera ruta
+            if (rutasDisponibles && rutasDisponibles.length > 0) {
+                seleccionarRuta(rutasDisponibles[0].id);
+            }
+        }
+
+        function dibujarGrid() {
+            const grid = document.getElementById('grid-lines');
+            for (let x = 100; x < 1200; x += 100) {
+                const line = createSVGElement('line', {
+                    x1: x, y1: 50, x2: x, y2: 750,
+                    stroke: '#000', 'stroke-width': 1
+                });
+                grid.appendChild(line);
+            }
+            for (let y = 100; y < 800; y += 100) {
+                const line = createSVGElement('line', {
+                    x1: 50, y1: y, x2: 1150, y2: y,
+                    stroke: '#000', 'stroke-width': 1
+                });
+                grid.appendChild(line);
+            }
+        }
+
+        function dibujarConexiones() {
+            const container = document.getElementById('map-connections');
+            conexionesBase.forEach(([desde, hacia]) => {
+                const n1 = nodosMapa[desde];
+                const n2 = nodosMapa[hacia];
+                if (n1 && n2) {
+                    const line = createSVGElement('line', {
+                        x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y,
+                        stroke: '#dee2e6', 'stroke-width': 4,
+                        'stroke-linecap': 'round', opacity: 0.6
+                    });
+                    container.appendChild(line);
+                }
+            });
+        }
+
+        function dibujarNodos() {
+            const container = document.getElementById('map-nodes');
+            const labels = document.getElementById('map-labels');
+            
+            Object.entries(nodosMapa).forEach(([key, nodo]) => {
+                // Grupo del nodo
+                const g = createSVGElement('g', {
+                    class: `map-node node-${nodo.type}`,
+                    id: `node-${key.replace(/\s+/g, '-')}`
+                });
+                
+                // Círculo con sombra
+                const shadow = createSVGElement('circle', {
+                    cx: nodo.x, cy: nodo.y + 3, r: 35,
+                    fill: '#00000020', filter: 'blur(6px)'
+                });
+                
+                const circle = createSVGElement('circle', {
+                    cx: nodo.x, cy: nodo.y, r: 32,
+                    fill: 'white', stroke: getNodeColor(nodo.type),
+                    'stroke-width': 4, class: 'node-circle'
+                });
+                
+                // Icono
+                const icon = createSVGElement('text', {
+                    x: nodo.x, y: nodo.y + 8,
+                    'text-anchor': 'middle', 'font-size': 28,
+                    class: 'node-icon'
+                });
+                icon.textContent = nodo.icon;
+                
+                // Label
+                const label = createSVGElement('text', {
+                    x: nodo.x, y: nodo.y + 55,
+                    'text-anchor': 'middle', 'font-size': 16,
+                    'font-weight': 'bold', fill: '#2c3e50',
+                    class: 'node-label'
+                });
+                label.textContent = nodo.label;
+                
+                g.appendChild(shadow);
+                g.appendChild(circle);
+                g.appendChild(icon);
+                container.appendChild(g);
+                labels.appendChild(label);
+            });
+        }
+
+        function seleccionarRuta(id) {
+            const ruta = rutasDisponibles.find(r => r.id === id);
+            if (!ruta) return;
+            
+            rutaActiva = ruta;
+            
+            // Actualizar UI
+            document.querySelectorAll('.route-card').forEach(card => {
+                card.classList.toggle('active', card.dataset.routeId == id);
+            });
+            
+            // Actualizar stats
+            document.getElementById('routeDistance').textContent = ruta.costo;
+            document.getElementById('routeSteps').textContent = ruta.ruta.length;
+            
+            // Dibujar en mapa
+            dibujarRutaEnMapa(ruta.ruta);
+            actualizarTimeline(ruta.ruta);
+        }
+
+        function dibujarRutaEnMapa(ruta) {
+            const container = document.getElementById('active-routes');
+            container.innerHTML = '';
+            
+            // RESETEAR TODOS LOS NODOS - Importante para eliminar estados anteriores
+            document.querySelectorAll('.map-node').forEach(n => {
+                n.classList.remove('active', 'has-products', 'transit');
+                // Resetear estilos inline que puedan quedar
+                const circle = n.querySelector('circle');
+                if (circle) {
+                    circle.style.fill = '';
+                    circle.style.stroke = '';
+                    circle.style.strokeWidth = '';
+                }
+            });
+            
+            // Dibujar líneas de ruta
+            for (let i = 0; i < ruta.length - 1; i++) {
+                const n1 = nodosMapa[ruta[i]];
+                const n2 = nodosMapa[ruta[i + 1]];
+                
+                if (n1 && n2) {
+                    const line = createSVGElement('line', {
+                        x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y,
+                        stroke: 'url(#routeGradient)',
+                        'stroke-width': 8, 'stroke-linecap': 'round',
+                        'stroke-dasharray': '1000', 'stroke-dashoffset': '1000',
+                        'marker-end': 'url(#arrowhead)', filter: 'url(#glow)'
+                    });
+                    
+                    // Animación
+                    setTimeout(() => {
+                        line.style.transition = 'stroke-dashoffset 0.6s ease';
+                        line.style.strokeDashoffset = '0';
+                    }, i * 100);
+                    
+                    container.appendChild(line);
+                }
+            }
+            
+            // Marcar nodos según su estado ACTUAL
+            ruta.forEach(nombreNodo => {
+                const nodeEl = document.getElementById(`node-${nombreNodo.replace(/\s+/g, '-')}`);
+                if (nodeEl) {
+                    nodeEl.classList.add('active');
+                    
+                    // Verificar si tiene productos ACTUALMENTE
+                    const tieneProductos = productosPorPasillo[nombreNodo] && productosPorPasillo[nombreNodo].length > 0;
+                    
+                    if (tieneProductos) {
+                        nodeEl.classList.add('has-products');
+                    } else if (nombreNodo !== 'Entrada' && !nombreNodo.startsWith('Caja')) {
+                        nodeEl.classList.add('transit');
+                    }
+                }
+            });
+        }
+
+        function actualizarTimeline(ruta) {
+            const container = document.getElementById('route-steps-container');
+            container.innerHTML = '';
+            
+            ruta.forEach((paso, index) => {
+                const productos = productosPorPasillo[paso] || [];
+                const div = document.createElement('div');
+                div.className = 'timeline-step' + (productos.length > 0 ? ' has-products' : '');
+                
+                div.innerHTML = `
+                    <div class="timeline-marker">${index + 1}</div>
+                    <div class="timeline-content">
+                        <h4 class="timeline-title">${nodosMapa[paso]?.icon || '📍'} ${paso}</h4>
+                        ${productos.length > 0 ? `
+                            <div class="timeline-products">
+                                <strong>Recoger ${productos.length} producto${productos.length > 1 ? 's' : ''}:</strong>
+                                <ul>${productos.map(p => `<li>${p.nombre}</li>`).join('')}</ul>
+                            </div>
+                        ` : '<p class="timeline-transit">Punto de paso</p>'}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Funciones de control
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel + 0.2, 2);
+            applyZoom();
+        }
+
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
+            applyZoom();
+        }
+
+        function resetView() {
+            zoomLevel = 1;
+            applyZoom();
+        }
+
+        function applyZoom() {
+            const map = document.getElementById('store-map');
+            map.style.transform = `scale(${zoomLevel})`;
+            map.style.transition = 'transform 0.3s ease';
+        }
+
+        // Gestión de productos
+        function eliminarProducto(nombre) {
+            if (!confirm(`¿Eliminar "${nombre}" de tu ruta?\n\nLa ruta se recalculará automáticamente.`)) return;
+            
+            // Mostrar indicador de carga con clase CSS
+            const productItem = document.querySelector(`[data-product="${nombre}"]`);
+            if (productItem) {
+                productItem.classList.add('removing');
+            }
+            
+            // Actualizar sessionStorage ANTES de redirigir
+            try {
+                const stored = sessionStorage.getItem('productos_seleccionados');
+                if (stored) {
+                    let productos = JSON.parse(stored);
+                    productos = productos.filter(p => p !== nombre);
+                    sessionStorage.setItem('productos_seleccionados', JSON.stringify(productos));
+                }
+            } catch (error) {
+                console.error('Error al actualizar sessionStorage:', error);
+            }
+            
+            // Redirigir al endpoint de eliminación
+            window.location.href = `/grafos/eliminar-producto/${encodeURIComponent(nombre)}/`;
+        }
+
+        // Tabs
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(`tab-${tab}`).classList.add('active');
+            });
+        });
+
+        // Búsqueda de productos
+        document.getElementById('searchProducts')?.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.product-item').forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        });
+
+        // Utilidades SVG
+        function createSVGElement(tag, attrs) {
+            const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+            return el;
+        }
+
+        function getNodeColor(type) {
+            const colors = {
+                start: '#28a745',
+                end: '#dc3545',
+                aisle: '#6c757d'
+            };
+            return colors[type] || '#6c757d';
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', inicializarMapa);
+    </script>
+    {% else %}
+    <!-- Sin ruta -->
+    <div class="container" style="padding: 2rem;">
         <div class="card">
             <h2 class="card-title">No hay ruta calculada</h2>
             <p>Por favor, selecciona productos primero.</p>
             <a href="{% url 'inicio' %}" class="btn btn-primary">Ir a Selección de Productos</a>
         </div>
-        {% endif %}
-
-        <!-- Información de Estructuras -->
-        <div class="grid">
-            <div class="card">
-                <h2 class="card-title">💡 Sobre la Ruta</h2>
-                <p><strong>🟢 Verde (🚪):</strong> Punto de inicio</p>
-                <p><strong>🔵 Azul (🛍️):</strong> Pasillos donde debes recoger productos</p>
-                <p><strong>⚪ Gris (➡️):</strong> Pasillos de tránsito (sin productos)</p>
-                <p><strong>🔴 Rojo (🛒):</strong> Punto final (caja)</p>
-                <p class="mt-2 text-muted text-small">La ruta se calculó usando el algoritmo de Dijkstra para minimizar la distancia total y optimizar tu tiempo de compra.</p>
-            </div>
-        </div>
     </div>
+    {% endif %}
 </body>
 </html>

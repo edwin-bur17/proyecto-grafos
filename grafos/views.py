@@ -34,15 +34,21 @@ def inicio(request):
     # Obtener productos seleccionados desde la sesión
     productos_seleccionados = request.session.get('productos_seleccionados', [])
     
+    # Verificar si estamos en modo "agregar productos"
+    modo_agregar = request.session.pop('modo_agregar', False)
+    
     context = {
         'productos': productos,
         'categorias': categorias,
         'termino_busqueda': termino_busqueda,
         'categoria_filtro': categoria_filtro,
         'productos_seleccionados': productos_seleccionados,
+        'modo_agregar': modo_agregar,
+        'num_productos_en_ruta': len(productos_seleccionados) if modo_agregar else 0,
     }
     
     return render(request, 'inicio.html', context)
+
 
 
 def calcular_ruta(request):
@@ -94,6 +100,54 @@ def limpiar_seleccion(request):
     request.session.pop('ruta_resultado', None)
     messages.success(request, 'Selección limpiada')
     return redirect('inicio')
+
+
+def agregar_productos_a_ruta(request):
+    """
+    Permite agregar más productos a una ruta ya calculada.
+    Mantiene los productos actuales y permite seleccionar adicionales.
+    """
+    # Marcar que estamos en modo "agregar"
+    request.session['modo_agregar'] = True
+    return redirect('inicio')
+
+
+def eliminar_producto_de_ruta(request, producto_nombre):
+    """
+    Elimina un producto específico de la ruta y recalcula.
+    Maneja correctamente la sincronización con sessionStorage del frontend.
+    """
+    productos_seleccionados = request.session.get('productos_seleccionados', [])
+    
+    if producto_nombre in productos_seleccionados:
+        # Eliminar el producto
+        productos_seleccionados.remove(producto_nombre)
+        request.session['productos_seleccionados'] = productos_seleccionados
+        request.session.modified = True  # Forzar guardado de sesión
+        
+        # Recalcular ruta si quedan productos
+        if productos_seleccionados:
+            try:
+                resultado = views_logic.calcular_ruta_automatica(productos_seleccionados)
+                request.session['ruta_resultado'] = resultado
+                request.session.modified = True
+                messages.success(
+                    request, 
+                    f'✅ Producto "{producto_nombre}" eliminado. Ruta recalculada con {len(productos_seleccionados)} producto(s).'
+                )
+            except Exception as e:
+                messages.error(request, f'❌ Error al recalcular la ruta: {str(e)}')
+                return redirect('inicio')
+        else:
+            # Si no quedan productos, limpiar todo
+            request.session.pop('ruta_resultado', None)
+            views_logic.limpiar_lista_compras()
+            messages.info(request, '📝 Todos los productos eliminados. Puedes iniciar una nueva compra.')
+            return redirect('inicio')
+    else:
+        messages.warning(request, f'⚠️ El producto "{producto_nombre}" no se encuentra en tu lista.')
+    
+    return redirect('ruta_resultado')
 
 
 def informacion(request):

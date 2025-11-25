@@ -1,0 +1,709 @@
+/* ==================== LAYOUT TIPO GOOGLE MAPS ==================== */
+.map-view-body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100vh;
+}
+
+.maps-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+/* ==================== PANEL LATERAL ==================== */
+.sidebar-panel {
+    width: 400px;
+    flex-shrink: 0;
+    background: white;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.sidebar-subtitle {
+    margin: 0.5rem 0 0 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Búsqueda */
+.search-box {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Pestañas */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+    background: rgba(102, 126, 234, 0.05);
+    color: #667eea;
+}
+
+.tab-btn.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: white;
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ==================== LISTA DE RUTAS ==================== */
+.routes-list {
+    padding: 1rem;
+}
+
+.route-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.route-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.route-card.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+}
+
+.route-card.optimal {
+    border-color: #28a745;
+}
+
+.route-card.optimal.active {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(40, 167, 69, 0.1) 100%);
+    border-color: #28a745;
+}
+
+.route-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.route-badge {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.route-card.optimal .route-badge {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.route-info {
+    flex: 1;
+}
+
+.route-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.route-meta {
+    margin: 0.25rem 0 0 0;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-blue {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge-green {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.route-preview {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #e0e0e0;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Timeline de Ruta */
+.route-timeline {
+    padding: 1rem;
+    border-top: 2px solid #e0e0e0;
+    margin-top: 1rem;
+}
+
+.timeline-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+}
+
+.timeline-step {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #dee2e6;
+}
+
+.timeline-step.has-products {
+    background: #e8f5e9;
+    border-left-color: #28a745;
+}
+
+.timeline-marker {
+    width: 28px;
+    height: 28px;
+    background: #6c757d;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.timeline-step.has-products .timeline-marker {
+    background: #28a745;
+}
+
+.timeline-content {
+    flex: 1;
+}
+
+.timeline-title {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.timeline-products {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.timeline-products ul {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+}
+
+.timeline-products li {
+    margin-bottom: 0.25rem;
+}
+
+.timeline-transit {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ==================== GESTIÓN DE PRODUCTOS ==================== */
+.products-manager {
+    padding: 1rem;
+}
+
+.products-count {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.products-count span {
+    color: #667eea;
+}
+
+.products-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.product-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.product-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+/* Estado de carga al eliminar */
+.product-item.removing {
+    opacity: 0.5;
+    pointer-events: none;
+    background: #f8f9fa;
+}
+
+.product-item.removing::after {
+    content: "Eliminando...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    animation: fadeIn 0.3s ease;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-name {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.product-details {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.product-location {
+    font-size: 0.75rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.product-remove {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fee;
+    border: 2px solid #fcc;
+    border-radius: 50%;
+    color: #dc3545;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.product-remove:hover {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transform: scale(1.15) rotate(90deg);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.product-remove:active {
+    transform: scale(0.95) rotate(90deg);
+}
+
+.products-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid #e0e0e0;
+}
+
+.btn-action {
+    padding: 0.75rem;
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    border: 2px solid;
+}
+
+.btn-outline {
+    background: white;
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+}
+
+.btn-danger {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+}
+
+/* ==================== ÁREA DEL MAPA ==================== */
+.map-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f0f2f5;
+    position: relative;
+}
+
+.map-controls {
+    background: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.control-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.control-btn {
+    width: 40px;
+    height: 40px;
+    background: white;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #2c3e50;
+}
+
+.control-btn:hover {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.route-stats-bar {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.map-canvas {
+    flex: 1;
+    padding: 2rem;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#store-map {
+    max-width: 100%;
+    max-height: 100%;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
+    transform-origin: center;
+}
+
+/* Leyenda */
+.map-legend {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 50;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-item:last-child {
+    margin-bottom: 0;
+}
+
+.legend-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.legend-text {
+    font-size: 0.9rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+/* ==================== ESTILOS SVG DEL MAPA ==================== */
+.map-node circle {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.map-node.active circle {
+    stroke-width: 6;
+    filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.4));
+    animation: pulseNode 2s ease-in-out infinite;
+}
+
+.map-node.has-products circle {
+    fill: #d4edda !important;
+    stroke: #28a745 !important;
+    stroke-width: 6;
+    animation: pulseGreen 2s ease-in-out infinite;
+}
+
+.map-node.transit circle {
+    fill: #f8f9fa !important;
+    stroke: #6c757d !important;
+    stroke-width: 4;
+}
+
+.node-label {
+    pointer-events: none;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+.map-node.active .node-label {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.node-icon {
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+.map-node.has-products .node-icon {
+    transform: scale(1.2);
+}
+
+/* Animaciones de pulso */
+@keyframes pulseNode {
+    0%, 100% {
+        filter: drop-shadow(0 4px 8px rgba(102, 126, 234, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 6px 12px rgba(102, 126, 234, 0.6));
+    }
+}
+
+@keyframes pulseGreen {
+    0%, 100% {
+        filter: drop-shadow(0 4px 8px rgba(40, 167, 69, 0.4));
+    }
+    50% {
+        filter: drop-shadow(0 6px 12px rgba(40, 167, 69, 0.6));
+    }
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+    .sidebar-panel {
+        width: 320px;
+    }
+
+    .route-stats-bar {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .maps-layout {
+        flex-direction: column;
+    }
+
+    .sidebar-panel {
+        width: 100%;
+        height: 40vh;
+        border-right: none;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .map-area {
+        height: 60vh;
+    }
+
+    .map-legend {
+        bottom: 1rem;
+        right: 1rem;
+        font-size: 0.85rem;
+    }
+
+    .legend-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 0.9rem;
+    }
+}
+
+/* ==================== ANIMACIONES ==================== */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.route-card.active {
+    animation: pulse 2s infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-item,
+.route-card,
+.timeline-step {
+    animation: fadeIn 0.3s ease;
+}

@@ -554,3 +554,192 @@ body {
     font-size: 2rem;
   }
 }
+
+/* ==================== MAPA Y SELECTORES ==================== */
+.route-selectors {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.route-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: var(--spacing-sm);
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg-white);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.route-btn:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-light);
+}
+
+.route-btn.active {
+    border-color: var(--color-accent);
+    background: rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.route-name {
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.route-cost {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+.map-container {
+    width: 100%;
+    height: 600px;
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    margin-bottom: var(--spacing-md);
+    overflow: hidden;
+    position: relative;
+}
+
+#store-map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Estilos del SVG */
+.map-connection-base {
+    stroke: #e0e0e0;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
+
+.route-line-active {
+    stroke: var(--color-accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+}
+
+@keyframes drawLine {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.map-node circle {
+    fill: white;
+    stroke: var(--color-border);
+    stroke-width: 3;
+    transition: all 0.3s ease;
+}
+
+.map-node text {
+    font-family: sans-serif;
+    font-size: 14px;
+    fill: var(--color-text-dark);
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.node-icon {
+    font-size: 24px;
+}
+
+/* Nodos activos en la ruta */
+.active-node circle {
+    stroke: var(--color-accent);
+    fill: #ebf5fb;
+}
+
+/* Nodos con productos */
+.has-products circle {
+    stroke: var(--color-success);
+    fill: #e8f8f5;
+    r: 30; /* Más grande */
+}
+
+.has-products .node-icon {
+    font-size: 28px;
+}
+
+/* Detalles de la ruta */
+.route-details-panel {
+    background: var(--color-bg-white);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+}
+
+.route-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+.route-step-card {
+    background: var(--color-bg-light);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: flex-start;
+    border-left: 4px solid transparent;
+}
+
+.route-step-card.has-products {
+    border-left-color: var(--color-success);
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.step-number {
+    background: var(--color-primary);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.step-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+}
+
+.badge-products {
+    background: var(--color-success);
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.step-products {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: var(--color-text-dark);
+}
+
+.step-products li {
+    margin-bottom: 2px;
+}

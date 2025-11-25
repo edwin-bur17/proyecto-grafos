@@ -23,3 +23,13 @@ def get_item(dictionary, key):
     if dictionary is None:
         return None
     return dictionary.get(key)
+
+
+@register.filter(name='to_json')
+def to_json(value):
+    """
+    Serializa un objeto a JSON para usar en JavaScript.
+    """
+    import json
+    from django.utils.safestring import mark_safe
+    return mark_safe(json.dumps(value))

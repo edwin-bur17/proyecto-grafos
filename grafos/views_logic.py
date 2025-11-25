@@ -99,6 +99,7 @@ def construir_arbol_categorias():
 def construir_grafo_tienda():
     """
     Construye y configura el grafo de la tienda con pasillos y conexiones.
+    Ahora incluye 4 cajas estratégicamente ubicadas.
     """
     global grafo_tienda
     grafo_tienda = Grafo()
@@ -113,27 +114,47 @@ def construir_grafo_tienda():
         "Pasillo 6": 0.2,
         "Pasillo 7": 0.4,
         "Pasillo 8": 0.5,
-        "Caja": 0.6,
+        "Caja 1": 0.6,  # Cerca de Pasillo 3 y 7
+        "Caja 2": 0.6,  # Cerca de Pasillo 6
+        "Caja 3": 0.6,  # Cerca de Pasillo 4
+        "Caja 4": 0.6,  # Cerca de Pasillo 8
     }
     
     for pasillo, congestion in pasillos.items():
         grafo_tienda.agregar_nodo(pasillo, congestion)
     
     conexiones = [
+        # Conexiones de Entrada
         ("Entrada", "Pasillo 1", 1),
         ("Entrada", "Pasillo 4", 2),
+        
+        # Conexiones entre pasillos - lado izquierdo
         ("Pasillo 1", "Pasillo 2", 1),
         ("Pasillo 2", "Pasillo 3", 1),
-        ("Pasillo 3", "Pasillo 4", 2),
+        ("Pasillo 3", "Pasillo 7", 1),
+        
+        # Conexiones entre pasillos - lado derecho
         ("Pasillo 4", "Pasillo 5", 1),
         ("Pasillo 5", "Pasillo 6", 1),
-        ("Pasillo 1", "Pasillo 3", 2),
-        ("Pasillo 2", "Pasillo 5", 3),
+        ("Pasillo 6", "Pasillo 8", 1),
+        
+        # Conexiones horizontales
+        ("Pasillo 1", "Pasillo 4", 2),
+        ("Pasillo 2", "Pasillo 5", 2),
         ("Pasillo 3", "Pasillo 6", 2),
-        ("Pasillo 6", "Caja", 1),
-        ("Pasillo 4", "Caja", 2),
-        ("Pasillo 7", "Caja", 3),
-        ("Pasillo 8", "Caja", 3),
+        ("Pasillo 7", "Pasillo 8", 2),
+        
+        # Conexiones a las cajas
+        ("Pasillo 3", "Caja 1", 1),
+        ("Pasillo 7", "Caja 1", 1),
+        ("Pasillo 6", "Caja 2", 1),
+        ("Pasillo 4", "Caja 3", 2),
+        ("Pasillo 8", "Caja 4", 1),
+        
+        # Conexiones entre cajas para permitir rutas alternativas
+        ("Caja 1", "Caja 2", 2),
+        ("Caja 2", "Caja 4", 2),
+        ("Caja 3", "Caja 4", 2),
     ]
     
     for desde, hacia, peso in conexiones:
@@ -174,11 +195,11 @@ def obtener_productos_seleccionados():
 def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
     """
     Calcula automáticamente la ruta óptima para los productos seleccionados.
-    Siempre inicia en "Entrada" y termina en "Caja".
+    **SIEMPRE** inicia en "Entrada" y termina en la caja más cercana al último producto.
     
     Args:
         nombres_productos: Lista de nombres de productos seleccionados
-        pasillo_inicio: Pasillo donde inicia el usuario (por defecto: "Entrada")
+        pasillo_inicio: Ignorado, siempre se usa "Entrada"
     
     Returns:
         dict: Resultado con ruta, productos por pasillo, y costo
@@ -190,6 +211,9 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
     construir_grafo_tienda()
     arbol = construir_arbol_categorias()
     productos = obtener_productos_seleccionados()
+    
+    # SIEMPRE iniciar en "Entrada"
+    pasillo_inicio = "Entrada"
     
     if not productos:
         return {
@@ -218,28 +242,91 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
                 productos_por_pasillo[pasillo] = []
             productos_por_pasillo[pasillo].append(producto)
     
-    # Calcular ruta óptima (usando pasillo_inicio)
+    # Lista de cajas disponibles
+    cajas_disponibles = ["Caja 1", "Caja 2", "Caja 3", "Caja 4"]
+    
+    # Calcular top rutas (usando pasillo_inicio="Entrada")
     if pasillos_necesarios:
-        ruta_optima, costo_total = grafo_tienda.calcular_ruta_optima(
+        top_rutas = grafo_tienda.calcular_top_rutas(
             pasillos_necesarios,
-            inicio=pasillo_inicio
+            inicio=pasillo_inicio,
+            top_k=3
         )
         
-        # Siempre terminar en Caja
-        if ruta_optima and ruta_optima[-1] != "Caja":
-            ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ruta_optima[-1], "Caja")
-            if ruta_a_caja:
-                ruta_optima.extend(ruta_a_caja[1:])
-                costo_total += costo_caja
+        rutas_procesadas = []
+        for i, (ruta, costo) in enumerate(top_rutas):
+            ruta_final = list(ruta)
+            costo_final = costo
+            
+            # Asegurar que SIEMPRE inicie en "Entrada"
+            if not ruta_final or ruta_final[0] != "Entrada":
+                # Si no inicia en Entrada, calcular ruta desde Entrada al primer punto
+                if ruta_final:
+                    ruta_desde_entrada, costo_entrada = grafo_tienda.ruta_mas_corta("Entrada", ruta_final[0])
+                    if ruta_desde_entrada:
+                        ruta_final = ruta_desde_entrada[:-1] + ruta_final
+                        costo_final += costo_entrada
+                else:
+                    ruta_final = ["Entrada"]
+            
+            # Encontrar la caja más cercana al último pasillo con productos
+            if ruta_final and ruta_final[-1] not in cajas_disponibles:
+                ultimo_pasillo = ruta_final[-1]
+                
+                # Buscar la caja más cercana
+                mejor_caja = None
+                menor_costo_caja = float('inf')
+                mejor_ruta_caja = None
+                
+                for caja in cajas_disponibles:
+                    ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ultimo_pasillo, caja)
+                    if ruta_a_caja and costo_caja < menor_costo_caja:
+                        menor_costo_caja = costo_caja
+                        mejor_caja = caja
+                        mejor_ruta_caja = ruta_a_caja
+                
+                # Agregar ruta a la caja más cercana
+                if mejor_ruta_caja:
+                    ruta_final.extend(mejor_ruta_caja[1:])  # Evitar duplicar el último pasillo
+                    costo_final += menor_costo_caja
+            
+            rutas_procesadas.append({
+                'id': i,
+                'nombre': 'Ruta Óptima' if i == 0 else f'Alternativa {i}',
+                'ruta': ruta_final,
+                'costo': round(costo_final, 2),
+                'es_optima': i == 0
+            })
+            
     else:
-        ruta_optima = [pasillo_inicio, "Caja"] if pasillo_inicio != "Caja" else ["Caja"]
-        costo_total = 0
+        # Caso sin productos: ir de Entrada a la caja más cercana
+        mejor_caja = "Caja 1"  # Usar Caja 1 como default
+        menor_costo = float('inf')
+        mejor_ruta = None
+        
+        for caja in cajas_disponibles:
+            ruta_directa, costo = grafo_tienda.ruta_mas_corta("Entrada", caja)
+            if ruta_directa and costo < menor_costo:
+                menor_costo = costo
+                mejor_caja = caja
+                mejor_ruta = ruta_directa
+        
+        rutas_procesadas = [{
+            'id': 0,
+            'nombre': 'Ruta Directa',
+            'ruta': mejor_ruta if mejor_ruta else ["Entrada", "Caja 1"],
+            'costo': round(menor_costo, 2) if mejor_ruta else 0,
+            'es_optima': True
+        }]
     
+    # Seleccionar la primera como activa por defecto
+    ruta_activa = rutas_procesadas[0] if rutas_procesadas else None
+
     return {
         'productos': productos,
         'pasillos_necesarios': pasillos_necesarios,
-        'ruta_optima': ruta_optima,
-        'costo_total': round(costo_total, 2),
+        'rutas': rutas_procesadas, # Lista de todas las opciones
+        'ruta_activa': ruta_activa, # La ruta seleccionada actualmente (para compatibilidad)
         'productos_por_pasillo': productos_por_pasillo,
     }
 

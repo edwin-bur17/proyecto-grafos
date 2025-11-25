@@ -151,6 +151,71 @@ class Grafo:
         
         return mejor_ruta if mejor_ruta else [], mejor_costo
 
+    def calcular_top_rutas(self, lista_pasillos, inicio=None, considerar_congestion=True, top_k=3):
+        """
+        Calcula las mejores k rutas para visitar múltiples pasillos.
+        Retorna una lista de tuplas (ruta, costo) ordenadas por costo.
+        """
+        if not lista_pasillos:
+            return []
+        
+        # Eliminar duplicados manteniendo el orden
+        pasillos_unicos = []
+        vistos = set()
+        for p in lista_pasillos:
+            if p not in vistos:
+                pasillos_unicos.append(p)
+                vistos.add(p)
+        
+        if len(pasillos_unicos) == 1:
+            return [(pasillos_unicos, 0)]
+        
+        # Si hay un inicio específico, lo usamos
+        if inicio and inicio in pasillos_unicos:
+            pasillos_unicos.remove(inicio)
+            pasillos_a_permutar = pasillos_unicos
+            punto_inicio = inicio
+        else:
+            punto_inicio = pasillos_unicos[0]
+            pasillos_a_permutar = pasillos_unicos[1:]
+        
+        rutas_encontradas = []
+        
+        # Probar todas las permutaciones posibles
+        for permutacion in permutations(pasillos_a_permutar):
+            orden = [punto_inicio] + list(permutacion)
+            ruta_completa = []
+            costo_total = 0
+            valida = True
+            
+            for i in range(len(orden) - 1):
+                ruta_segmento, costo_segmento = self.ruta_mas_corta(
+                    orden[i], orden[i + 1], considerar_congestion
+                )
+                
+                if ruta_segmento is None:
+                    valida = False
+                    break
+                
+                # Agregar segmento evitando duplicar nodos
+                if i == 0:
+                    ruta_completa.extend(ruta_segmento)
+                else:
+                    ruta_completa.extend(ruta_segmento[1:])
+                
+                costo_total += costo_segmento
+            
+            if valida:
+                rutas_encontradas.append((ruta_completa, costo_total))
+        
+        # Ordenar por costo y retornar las top_k
+        rutas_encontradas.sort(key=lambda x: x[1])
+        
+        # Si no encontramos suficientes rutas (ej. pocas permutaciones), devolvemos lo que hay
+        # Si solo hay 1 ruta posible (ej. 2 nodos), duplicamos o modificamos ligeramente para tener "alternativas" visuales
+        # pero por ahora devolvemos las reales.
+        return rutas_encontradas[:top_k]
+
     def obtener_info_nodo(self, nodo):
         """Retorna información detallada sobre un nodo."""
         if nodo not in self.nodos:
