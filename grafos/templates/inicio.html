@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guía de Compras Inteligente</title>
     <link rel="stylesheet" href="{% static 'grafos/css/styles.css' %}">
+    <script src="{% static 'grafos/js/shopping.js' %}" defer></script>
 </head>
 <body>
     <div class="container">
@@ -115,53 +117,6 @@
                 </div>
             </div>
         </form>
-
-        <!-- RESULTADOS DE RUTA -->
-        {% if ruta_resultado %}
-        <div class="grid">
-            <div class="card grid-full">
-                <h2 class="card-title">Ruta Óptima Calculada</h2>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
-                    <div class="text-center" style="background: var(--color-bg-light); padding: 1rem; border-radius: var(--border-radius);">
-                        <div style="font-size: 2.5rem; font-weight: bold; color: var(--color-accent);">
-                            {{ ruta_resultado.productos|length }}
-                        </div>
-                        <div class="text-small text-muted">Productos</div>
-                    </div>
-                    <div class="text-center" style="background: var(--color-bg-light); padding: 1rem; border-radius: var(--border-radius);">
-                        <div style="font-size: 2.5rem; font-weight: bold; color: var(--color-accent);">
-                            {{ ruta_resultado.pasillos_necesarios|length }}
-                        </div>
-                        <div class="text-small text-muted">Pasillos</div>
-                    </div>
-                    <div class="text-center" style="background: var(--color-bg-light); padding: 1rem; border-radius: var(--border-radius);">
-                        <div style="font-size: 2.5rem; font-weight: bold; color: var(--color-accent);">
-                            {{ ruta_resultado.costo_total }}
-                        </div>
-                        <div class="text-small text-muted">Costo</div>
-                    </div>
-                </div>
-                
-                <h3 class="mb-2">Ruta a Seguir:</h3>
-                <div style="background: var(--color-bg-light); padding: 1rem; border-radius: var(--border-radius); font-weight: 600; font-size: 1.1rem; text-align: center;">
-                    {{ ruta_resultado.ruta_optima|join:" → " }}
-                </div>
-                
-                <h3 class="mt-3 mb-2">Productos por Pasillo:</h3>
-                {% for pasillo, productos_pasillo in ruta_resultado.productos_por_pasillo.items %}
-                <div style="background: var(--color-bg-light); padding: 1rem; margin-bottom: 0.5rem; border-radius: var(--border-radius); border-left: 4px solid var(--color-accent);">
-                    <strong style="color: var(--color-primary);">{{ pasillo }}</strong>
-                    <ul style="margin: 0.5rem 0 0 1.5rem; list-style: disc;">
-                        {% for producto in productos_pasillo %}
-                        <li>{{ producto.nombre }} - {{ producto.marca }} ({{ producto.presentacion }})</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
 
         <!-- INFORMACIÓN DE ESTRUCTURAS DE DATOS -->
         <div class="grid">

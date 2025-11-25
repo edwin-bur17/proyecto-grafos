@@ -21,11 +21,15 @@ def inicio(request):
     else:
         productos = inventario
     
+    # Obtener productos seleccionados desde la sesión
+    productos_seleccionados = request.session.get('productos_seleccionados', [])
+    
     context = {
         'productos': productos,
         'categorias': categorias,
         'termino_busqueda': termino_busqueda,
         'categoria_filtro': categoria_filtro,
+        'productos_seleccionados': productos_seleccionados,
     }
     
     return render(request, 'inicio.html', context)
@@ -34,7 +38,7 @@ def inicio(request):
 def calcular_ruta(request):
     """
     Calcula la ruta óptima automáticamente para los productos seleccionados.
-    Siempre inicia en Entrada y termina en Caja.
+    Guarda los resultados en sesión y redirige a la página de resultados.
     """
     if request.method == 'POST':
         # Obtener productos seleccionados (checkboxes)
@@ -47,25 +51,37 @@ def calcular_ruta(request):
         # Calcular ruta automáticamente
         resultado = views_logic.calcular_ruta_automatica(productos_seleccionados)
         
-        # Preparar contexto para mostrar resultados
-        inventario = views_logic.obtener_inventario_productos()
-        categorias = views_logic.obtener_categorias()
+        # Guardar resultados en sesión
+        request.session['ruta_resultado'] = resultado
+        request.session['productos_seleccionados'] = productos_seleccionados
         
-        context = {
-            'productos': inventario,
-            'categorias': categorias,
-            'ruta_resultado': resultado,
-            'productos_seleccionados': productos_seleccionados,
-        }
-        
-        return render(request, 'inicio.html', context)
+        # Redirigir a página de resultados
+        return redirect('ruta_resultado')
     
     return redirect('inicio')
+
+
+def ver_ruta_resultado(request):
+    """
+    Muestra la página de resultados con la ruta calculada.
+    """
+    ruta_resultado = request.session.get('ruta_resultado')
+    productos_seleccionados = request.session.get('productos_seleccionados', [])
+    
+    context = {
+        'ruta_resultado': ruta_resultado,
+        'productos_seleccionados': productos_seleccionados,
+    }
+    
+    return render(request, 'ruta_resultado.html', context)
 
 
 def limpiar_seleccion(request):
     """Limpia la selección de productos y resultados."""
     views_logic.limpiar_lista_compras()
+    # Limpiar datos de sesión
+    request.session.pop('productos_seleccionados', None)
+    request.session.pop('ruta_resultado', None)
     messages.success(request, 'Selección limpiada')
     return redirect('inicio')
 

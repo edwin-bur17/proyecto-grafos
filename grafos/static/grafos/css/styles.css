@@ -319,6 +319,213 @@ body {
   display: none;
 }
 
+/* ==================== ROUTE VISUALIZATION ==================== */
+.route-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  padding: var(--spacing-md) 0;
+}
+
+.route-step {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: var(--spacing-sm);
+  background-color: var(--color-bg-white);
+  border-radius: var(--border-radius);
+  margin-bottom: var(--spacing-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.route-step:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.route-step:last-child {
+  margin-bottom: 0;
+}
+
+/* Línea conectora entre pasos */
+.route-step::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  top: 100%;
+  width: 3px;
+  height: var(--spacing-md);
+  background: linear-gradient(
+    to bottom,
+    var(--color-accent) 0%,
+    var(--color-border) 100%
+  );
+  z-index: 0;
+}
+
+.route-step:last-child::after {
+  display: none;
+}
+
+/* Badge numerado */
+.route-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1.25rem;
+  color: white;
+  margin-right: var(--spacing-md);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Colores según tipo de paso */
+.route-badge.start {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+}
+
+.route-badge.pasillo {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+}
+
+.route-badge.transit {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+  opacity: 0.8;
+}
+
+.route-badge.finish {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+/* Contenido del paso */
+.route-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.route-description {
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  margin-bottom: var(--spacing-xs);
+}
+
+.route-products {
+  margin-top: var(--spacing-xs);
+}
+
+.route-products-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--spacing-xs) 0 0 0;
+}
+
+.route-products-list li {
+  padding: var(--spacing-xs);
+  background-color: var(--color-bg-light);
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+}
+
+.route-products-list li::before {
+  content: "•";
+  color: var(--color-accent);
+  font-weight: bold;
+  margin-right: var(--spacing-xs);
+  font-size: 1.2rem;
+}
+
+/* Ícono en el badge */
+.route-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* Estadísticas de ruta */
+.route-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.route-stat-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #ecf0f1 100%);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.route-stat-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+.route-stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  line-height: 1;
+  margin-bottom: var(--spacing-xs);
+}
+
+.route-stat-label {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Productos collapse/expandir */
+.products-toggle {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.products-toggle:hover {
+  color: var(--color-primary);
+}
+
+.products-toggle::after {
+  content: "▼";
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.products-toggle.collapsed::after {
+  transform: rotate(-90deg);
+}
+
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .grid {
@@ -331,5 +538,19 @@ body {
 
   body {
     padding: var(--spacing-sm);
+  }
+
+  .route-badge {
+    min-width: 48px;
+    height: 48px;
+    font-size: 1.1rem;
+  }
+
+  .route-title {
+    font-size: 1.1rem;
+  }
+
+  .route-stat-value {
+    font-size: 2rem;
   }
 }

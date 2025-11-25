@@ -1,0 +1,151 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta Óptima - Guía de Compras</title>
+    <link rel="stylesheet" href="{% static 'grafos/css/styles.css' %}">
+    <script src="{% static 'grafos/js/shopping.js' %}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="header-title">🗺️ Tu Ruta Óptima de Compras</h1>
+            <p class="header-subtitle">Sigue estos pasos para completar tu compra de manera eficiente</p>
+        </header>
+
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message message-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if ruta_resultado %}
+        <div class="grid">
+            <!-- Estadísticas de Ruta -->
+            <div class="card grid-full">
+                <h2 class="card-title">📊 Resumen de tu Compra</h2>
+                
+                <div class="route-stats">
+                    <div class="route-stat-card">
+                        <div class="route-stat-value">{{ ruta_resultado.productos|length }}</div>
+                        <div class="route-stat-label">Productos</div>
+                    </div>
+                    <div class="route-stat-card">
+                        <div class="route-stat-value">{{ ruta_resultado.pasillos_necesarios|length }}</div>
+                        <div class="route-stat-label">Pasillos con Productos</div>
+                    </div>
+                    <div class="route-stat-card">
+                        <div class="route-stat-value">{{ ruta_resultado.ruta_optima|length }}</div>
+                        <div class="route-stat-label">Pasos Totales</div>
+                    </div>
+                    <div class="route-stat-card">
+                        <div class="route-stat-value">{{ ruta_resultado.costo_total }}</div>
+                        <div class="route-stat-label">Costo de Ruta</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ruta Visual Paso a Paso -->
+            <div class="card grid-full">
+                <h2 class="card-title">📍 Sigue Esta Ruta Paso a Paso</h2>
+                
+                <div class="route-container">
+                    {% for paso in ruta_resultado.ruta_optima %}
+                    <div class="route-step">
+                        {% if forloop.first %}
+                            <!-- Paso inicial: Entrada -->
+                            <div class="route-badge start">
+                                <span class="route-icon">🚪</span>
+                            </div>
+                            <div class="route-content">
+                                <div class="route-title">{{ paso }}</div>
+                                <div class="route-description">Punto de inicio - Comienza tu recorrido aquí</div>
+                            </div>
+                        {% elif forloop.last %}
+                            <!-- Paso final: Caja -->
+                            <div class="route-badge finish">
+                                <span class="route-icon">🛒</span>
+                            </div>
+                            <div class="route-content">
+                                <div class="route-title">{{ paso }}</div>
+                                <div class="route-description">Punto final - Realiza tu pago aquí</div>
+                            </div>
+                        {% else %}
+                            <!-- Verificar si es pasillo con productos o de tránsito -->
+                            {% if ruta_resultado.productos_por_pasillo|get_item:paso %}
+                                <!-- Pasillo con productos -->
+                                <div class="route-badge pasillo">
+                                    <span class="route-icon">🛍️</span>
+                                </div>
+                                <div class="route-content">
+                                    <div class="route-title">{{ paso }}</div>
+                                    <div class="route-description">
+                                        <strong>🎯 Recoge aquí:</strong> {{ ruta_resultado.productos_por_pasillo|get_item:paso|length }} producto{{ ruta_resultado.productos_por_pasillo|get_item:paso|length|pluralize }}
+                                    </div>
+                                    <div class="route-products">
+                                        <ul class="route-products-list">
+                                            {% for producto in ruta_resultado.productos_por_pasillo|get_item:paso %}
+                                            <li><strong>{{ producto.nombre }}</strong> - {{ producto.marca }} ({{ producto.presentacion }})</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- Pasillo de tránsito -->
+                                <div class="route-badge transit">
+                                    <span class="route-icon">➡️</span>
+                                </div>
+                                <div class="route-content">
+                                    <div class="route-title">{{ paso }}</div>
+                                    <div class="route-description">Pasillo de tránsito - Solo continúa por aquí</div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="card grid-full">
+                <h2 class="card-title">¿Qué quieres hacer?</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <a href="{% url 'inicio' %}" class="btn btn-primary btn-block" style="text-decoration: none;">
+                        ← Volver a Seleccionar Productos
+                    </a>
+                    <a href="{% url 'limpiar_seleccion' %}" class="btn btn-danger btn-block" style="text-decoration: none;">
+                        🗑️ Nueva Compra (Limpiar Todo)
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Si no hay resultados, redirigir a inicio -->
+        <div class="card">
+            <h2 class="card-title">No hay ruta calculada</h2>
+            <p>Por favor, selecciona productos primero.</p>
+            <a href="{% url 'inicio' %}" class="btn btn-primary">Ir a Selección de Productos</a>
+        </div>
+        {% endif %}
+
+        <!-- Información de Estructuras -->
+        <div class="grid">
+            <div class="card">
+                <h2 class="card-title">💡 Sobre la Ruta</h2>
+                <p><strong>🟢 Verde (🚪):</strong> Punto de inicio</p>
+                <p><strong>🔵 Azul (🛍️):</strong> Pasillos donde debes recoger productos</p>
+                <p><strong>⚪ Gris (➡️):</strong> Pasillos de tránsito (sin productos)</p>
+                <p><strong>🔴 Rojo (🛒):</strong> Punto final (caja)</p>
+                <p class="mt-2 text-muted text-small">La ruta se calculó usando el algoritmo de Dijkstra para minimizar la distancia total y optimizar tu tiempo de compra.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
