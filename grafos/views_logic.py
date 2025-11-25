@@ -13,53 +13,91 @@ grafo_tienda = Grafo()
 def obtener_inventario_productos():
     """
     Retorna el inventario completo de productos disponibles en la tienda.
-    Cada producto incluye: nombre, marca, tipo, presentación, categoría, pasillo.
+    Cada producto incluye: nombre, marca, tipo, presentación, categoría, pasillo (estante).
+    
+    IMPORTANTE: Los 'pasillos' ahora representan ESTANTES donde se almacenan los productos,
+    no los caminos de tránsito. Los caminos son nodos separados en el grafo.
     """
     return [
-        # Pasillo 1 - Lácteos
-        {'nombre': 'Leche Alquería', 'marca': 'Alquería', 'tipo': 'Entera', 'presentacion': '1L', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
-        {'nombre': 'Queso Alpina', 'marca': 'Alpina', 'tipo': 'Fresco', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
-        {'nombre': 'Yogur Colanta', 'marca': 'Colanta', 'tipo': 'Griego', 'presentacion': '200g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
-        {'nombre': 'Mantequilla Alpina', 'marca': 'Alpina', 'tipo': 'Con Sal', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Pasillo 1'},
+        # Estante Lácteos
+        {'nombre': 'Leche Alquería', 'marca': 'Alquería', 'tipo': 'Entera', 'presentacion': '1L', 'categoria': 'Lácteos', 'pasillo': 'Estante Lácteos'},
+        {'nombre': 'Queso Alpina', 'marca': 'Alpina', 'tipo': 'Fresco', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Estante Lácteos'},
+        {'nombre': 'Yogur Colanta', 'marca': 'Colanta', 'tipo': 'Griego', 'presentacion': '200g', 'categoria': 'Lácteos', 'pasillo': 'Estante Lácteos'},
+        {'nombre': 'Mantequilla Alpina', 'marca': 'Alpina', 'tipo': 'Con Sal', 'presentacion': '250g', 'categoria': 'Lácteos', 'pasillo': 'Estante Lácteos'},
+        {'nombre': 'Crema de Leche', 'marca': 'Colanta', 'tipo': 'Original', 'presentacion': '200ml', 'categoria': 'Lácteos', 'pasillo': 'Estante Lácteos'},
         
-        # Pasillo 2 - Aseo
-        {'nombre': 'Jabón Dove', 'marca': 'Dove', 'tipo': 'Corporal', 'presentacion': '90g', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
-        {'nombre': 'Shampoo Pantene', 'marca': 'Pantene', 'tipo': 'Control Caída', 'presentacion': '400ml', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
-        {'nombre': 'Detergente Ariel', 'marca': 'Ariel', 'tipo': 'Líquido', 'presentacion': '2L', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
-        {'nombre': 'Crema Dental Colgate', 'marca': 'Colgate', 'tipo': 'Triple Acción', 'presentacion': '100ml', 'categoria': 'Aseo', 'pasillo': 'Pasillo 2'},
+        # Estante Frutas y Verduras
+        {'nombre': 'Manzana Roja', 'marca': 'Fresco', 'tipo': 'Nacional', 'presentacion': '1kg', 'categoria': 'Frutas', 'pasillo': 'Estante Frutas'},
+        {'nombre': 'Banano', 'marca': 'Fresco', 'tipo': 'Orgánico', 'presentacion': '1kg', 'categoria': 'Frutas', 'pasillo': 'Estante Frutas'},
+        {'nombre': 'Naranja', 'marca': 'Fresco', 'tipo': 'Valencia', 'presentacion': '1kg', 'categoria': 'Frutas', 'pasillo': 'Estante Frutas'},
+        {'nombre': 'Lechuga', 'marca': 'Fresco', 'tipo': 'Crespa', 'presentacion': '1un', 'categoria': 'Verduras', 'pasillo': 'Estante Verduras'},
+        {'nombre': 'Tomate', 'marca': 'Fresco', 'tipo': 'Chonto', 'presentacion': '500g', 'categoria': 'Verduras', 'pasillo': 'Estante Verduras'},
+        {'nombre': 'Zanahoria', 'marca': 'Fresco', 'tipo': 'Nacional', 'presentacion': '500g', 'categoria': 'Verduras', 'pasillo': 'Estante Verduras'},
+        {'nombre': 'Cebolla', 'marca': 'Fresco', 'tipo': 'Cabezona', 'presentacion': '500g', 'categoria': 'Verduras', 'pasillo': 'Estante Verduras'},
         
-        # Pasillo 3 - Granos
-        {'nombre': 'Arroz Diana', 'marca': 'Diana', 'tipo': 'Extra', 'presentacion': '1kg', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
-        {'nombre': 'Frijol Rojo', 'marca': 'La Moderna', 'tipo': 'Rojo', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
-        {'nombre': 'Lentejas', 'marca': 'Cosecha Roja', 'tipo': 'Premium', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
-        {'nombre': 'Pasta Doria', 'marca': 'Doria', 'tipo': 'Espagueti', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Pasillo 3'},
+        # Estante Aseo Personal
+        {'nombre': 'Jabón Dove', 'marca': 'Dove', 'tipo': 'Corporal', 'presentacion': '90g', 'categoria': 'Aseo Personal', 'pasillo': 'Estante Aseo'},
+        {'nombre': 'Shampoo Pantene', 'marca': 'Pantene', 'tipo': 'Control Caída', 'presentacion': '400ml', 'categoria': 'Aseo Personal', 'pasillo': 'Estante Aseo'},
+        {'nombre': 'Crema Dental Colgate', 'marca': 'Colgate', 'tipo': 'Triple Acción', 'presentacion': '100ml', 'categoria': 'Aseo Personal', 'pasillo': 'Estante Aseo'},
+        {'nombre': 'Desodorante Rexona', 'marca': 'Rexona', 'tipo': 'Clinical', 'presentacion': '50ml', 'categoria': 'Aseo Personal', 'pasillo': 'Estante Aseo'},
+        {'nombre': 'Acondicionador Sedal', 'marca': 'Sedal', 'tipo': 'Brillo', 'presentacion': '350ml', 'categoria': 'Aseo Personal', 'pasillo': 'Estante Aseo'},
         
-        # Pasillo 4 - Bebidas
-        {'nombre': 'Coca Cola', 'marca': 'Coca Cola', 'tipo': 'Original', 'presentacion': '2L', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
-        {'nombre': 'Jugo Hit', 'marca': 'Hit', 'tipo': 'Mora', 'presentacion': '1L', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
-        {'nombre': 'Agua Cristal', 'marca': 'Cristal', 'tipo': 'Natural', 'presentacion': '600ml', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
-        {'nombre': 'Té Hatsu', 'marca': 'Hatsu', 'tipo': 'Verde', 'presentacion': '500ml', 'categoria': 'Bebidas', 'pasillo': 'Pasillo 4'},
+        # Estante Limpieza
+        {'nombre': 'Detergente Ariel', 'marca': 'Ariel', 'tipo': 'Líquido', 'presentacion': '2L', 'categoria': 'Limpieza', 'pasillo': 'Estante Limpieza'},
+        {'nombre': 'Suavizante Suavitel', 'marca': 'Suavitel', 'tipo': 'Durazzno', 'presentacion': '1L', 'categoria': 'Limpieza', 'pasillo': 'Estante Limpieza'},
+        {'nombre': 'Limpiapisos Fabuloso', 'marca': 'Fabuloso', 'tipo': 'Lavanda', 'presentacion': '1L', 'categoria': 'Limpieza', 'pasillo': 'Estante Limpieza'},
+        {'nombre': 'Cloro Clorox', 'marca': 'Clorox', 'tipo': 'Original', 'presentacion': '1L', 'categoria': 'Limpieza', 'pasillo': 'Estante Limpieza'},
+        {'nombre': 'Lavavajillas Axión', 'marca': 'Axión', 'tipo': 'Limón', 'presentacion': '500ml', 'categoria': 'Limpieza', 'pasillo': 'Estante Limpieza'},
         
-        # Pasillo 5 - Snacks
-        {'nombre': 'Papas Margarita', 'marca': 'Margarita', 'tipo': 'Natural', 'presentacion': '150g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
-        {'nombre': 'Chocolate Jet', 'marca': 'Jet', 'tipo': 'Leche', 'presentacion': '35g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
-        {'nombre': 'Galletas Festival', 'marca': 'Festival', 'tipo': 'Chocolate', 'presentacion': '200g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
-        {'nombre': 'Maní Toddy', 'marca': 'Toddy', 'tipo': 'Salado', 'presentacion': '100g', 'categoria': 'Snacks', 'pasillo': 'Pasillo 5'},
+        # Estante Granos y Cereales
+        {'nombre': 'Arroz Diana', 'marca': 'Diana', 'tipo': 'Extra', 'presentacion': '1kg', 'categoria': 'Granos', 'pasillo': 'Estante Granos'},
+        {'nombre': 'Frijol Rojo', 'marca': 'La Moderna', 'tipo': 'Rojo', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Estante Granos'},
+        {'nombre': 'Lentejas', 'marca': 'Cosecha Roja', 'tipo': 'Premium', 'presentacion': '500g', 'categoria': 'Granos', 'pasillo': 'Estante Granos'},
+        {'nombre': 'Avena Quaker', 'marca': 'Quaker', 'tipo': 'Hojuelas', 'presentacion': '500g', 'categoria': 'Cereales', 'pasillo': 'Estante Granos'},
+        {'nombre': 'Cereal Zucaritas', 'marca': 'Kelloggs', 'tipo': 'Original', 'presentacion': '400g', 'categoria': 'Cereales', 'pasillo': 'Estante Granos'},
         
-        # Pasillo 6 - Panadería
-        {'nombre': 'Pan Bimbo', 'marca': 'Bimbo', 'tipo': 'Integral', 'presentacion': '450g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
-        {'nombre': 'Pan Integral', 'marca': 'Super Ricas', 'tipo': 'Integral', 'presentacion': '500g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
-        {'nombre': 'Tostadas Doria', 'marca': 'Doria', 'tipo': 'Tradicional', 'presentacion': '300g', 'categoria': 'Panadería', 'pasillo': 'Pasillo 6'},
+        # Estante Pastas y Harinas
+        {'nombre': 'Pasta Doria', 'marca': 'Doria', 'tipo': 'Espagueti', 'presentacion': '500g', 'categoria': 'Pastas', 'pasillo': 'Estante Pastas'},
+        {'nombre': 'Pasta Lasagna', 'marca': 'Doria', 'tipo': 'Lasagna', 'presentacion': '500g', 'categoria': 'Pastas', 'pasillo': 'Estante Pastas'},
+        {'nombre': 'Harina PAN', 'marca': 'PAN', 'tipo': 'Blanca', 'presentacion': '1kg', 'categoria': 'Harinas', 'pasillo': 'Estante Pastas'},
+        {'nombre': 'Harina de Trigo', 'marca': 'Haz de Oros', 'tipo': 'Todo uso', 'presentacion': '1kg', 'categoria': 'Harinas', 'pasillo': 'Estante Pastas'},
+        
+        # Estante Bebidas
+        {'nombre': 'Coca Cola', 'marca': 'Coca Cola', 'tipo': 'Original', 'presentacion': '2L', 'categoria': 'Bebidas', 'pasillo': 'Estante Bebidas'},
+        {'nombre': 'Jugo Hit', 'marca': 'Hit', 'tipo': 'Mora', 'presentacion': '1L', 'categoria': 'Bebidas', 'pasillo': 'Estante Bebidas'},
+        {'nombre': 'Agua Cristal', 'marca': 'Cristal', 'tipo': 'Natural', 'presentacion': '600ml', 'categoria': 'Bebidas', 'pasillo': 'Estante Bebidas'},
+        {'nombre': 'Té Hatsu', 'marca': 'Hatsu', 'tipo': 'Verde', 'presentacion': '500ml', 'categoria': 'Bebidas', 'pasillo': 'Estante Bebidas'},
+        {'nombre': 'Gaseosa Colombiana', 'marca': 'Postobón', 'tipo': 'Original', 'presentacion': '1.5L', 'categoria': 'Bebidas', 'pasillo': 'Estante Bebidas'},
+        
+        # Estante Snacks y Dulces
+        {'nombre': 'Papas Margarita', 'marca': 'Margarita', 'tipo': 'Natural', 'presentacion': '150g', 'categoria': 'Snacks', 'pasillo': 'Estante Snacks'},
+        {'nombre': 'Chocolate Jet', 'marca': 'Jet', 'tipo': 'Leche', 'presentacion': '35g', 'categoria': 'Dulces', 'pasillo': 'Estante Snacks'},
+        {'nombre': 'Galletas Festival', 'marca': 'Festival', 'tipo': 'Chocolate', 'presentacion': '200g', 'categoria': 'Snacks', 'pasillo': 'Estante Snacks'},
+        {'nombre': 'Maní Toddy', 'marca': 'Toddy', 'tipo': 'Salado', 'presentacion': '100g', 'categoria': 'Snacks', 'pasillo': 'Estante Snacks'},
+        {'nombre': 'Chicles Trident', 'marca': 'Trident', 'tipo': 'Menta', 'presentacion': '12un', 'categoria': 'Dulces', 'pasillo': 'Estante Snacks'},
+        {'nombre': 'Gomitas Bon Bon Bum', 'marca': 'Colombina', 'tipo': 'Surtidas', 'presentacion': '100g', 'categoria': 'Dulces', 'pasillo': 'Estante Snacks'},
+        
+        # Estante Panadería
+        {'nombre': 'Pan Bimbo', 'marca': 'Bimbo', 'tipo': 'Integral', 'presentacion': '450g', 'categoria': 'Panadería', 'pasillo': 'Estante Panadería'},
+        {'nombre': 'Pan Integral', 'marca': 'Super Ricas', 'tipo': 'Integral', 'presentacion': '500g', 'categoria': 'Panadería', 'pasillo': 'Estante Panadería'},
+        {'nombre': 'Tostadas Doria', 'marca': 'Doria', 'tipo': 'Tradicional', 'presentacion': '300g', 'categoria': 'Panadería', 'pasillo': 'Estante Panadería'},
+        {'nombre': 'Pandebono', 'marca': 'La Especial', 'tipo': 'Congelado', 'presentacion': '500g', 'categoria': 'Panadería', 'pasillo': 'Estante Panadería'},
 
-        # Pasillo 7 - Ropa
-        {'nombre': 'Camiseta Adidas Hombre', 'marca': 'Adidas', 'tipo': 'Hombre', 'presentacion': 'M', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
-        {'nombre': 'Pantalón Nike Dama', 'marca': 'Nike', 'tipo': 'Dama', 'presentacion': 'S', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
-        {'nombre': 'Zapatos Puma Running', 'marca': 'Puma', 'tipo': 'Running', 'presentacion': '40', 'categoria': 'Ropa', 'pasillo': 'Pasillo 7'},
-
-        # Pasillo 8 - Electrodomésticos
-        {'nombre': 'Televisor Samsung 55p', 'marca': 'Samsung', 'tipo': 'LED', 'presentacion': '55p', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
-        {'nombre': 'Microondas Haceb 20L', 'marca': 'Haceb', 'tipo': 'Digital', 'presentacion': '20L', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
-        {'nombre': 'Lavadora LG 18kg', 'marca': 'LG', 'tipo': 'Carga Superior', 'presentacion': '18kg', 'categoria': 'Electrodomésticos', 'pasillo': 'Pasillo 8'},
+        # Estante Carnes y Embutidos
+        {'nombre': 'Salchicha Zenú', 'marca': 'Zenú', 'tipo': 'Suiza', 'presentacion': '500g', 'categoria': 'Embutidos', 'pasillo': 'Estante Carnes'},
+        {'nombre': 'Jamón de Pierna', 'marca': 'Pietran', 'tipo': 'Ahumado', 'presentacion': '250g', 'categoria': 'Embutidos', 'pasillo': 'Estante Carnes'},
+        {'nombre': 'Pollo Entero', 'marca': 'Piko', 'tipo': 'Fresco', 'presentacion': '1.5kg', 'categoria': 'Carnes', 'pasillo': 'Estante Carnes'},
+        {'nombre': 'Carne Molida', 'marca': 'Guadalupe', 'tipo': 'Res', 'presentacion': '500g', 'categoria': 'Carnes', 'pasillo': 'Estante Carnes'},
+        
+        # Estante Congelados
+        {'nombre': 'Pizza Congelada', 'marca': 'Mr. Pizza', 'tipo': 'Hawaiana', 'presentacion': '400g', 'categoria': 'Congelados', 'pasillo': 'Estante Congelados'},
+        {'nombre': 'Helado Crem Helado', 'marca': 'Crem Helado', 'tipo': 'Vainilla', 'presentacion': '1L', 'categoria': 'Congelados', 'pasillo': 'Estante Congelados'},
+        {'nombre': 'Verduras Mixtas', 'marca': 'La Huerta', 'tipo': 'Congeladas', 'presentacion': '500g', 'categoria': 'Congelados', 'pasillo': 'Estante Congelados'},
+        
+        # Estante Mascotas
+        {'nombre': 'Alimento Perros Pedigree', 'marca': 'Pedigree', 'tipo': 'Adultos', 'presentacion': '2kg', 'categoria': 'Mascotas', 'pasillo': 'Estante Mascotas'},
+        {'nombre': 'Alimento Gatos Whiskas', 'marca': 'Whiskas', 'tipo': 'Adultos', 'presentacion': '1kg', 'categoria': 'Mascotas', 'pasillo': 'Estante Mascotas'},
+        {'nombre': 'Arena para Gatos', 'marca': 'Catsan', 'tipo': 'Aglutinante', 'presentacion': '4kg', 'categoria': 'Mascotas', 'pasillo': 'Estante Mascotas'},
     ]
 
 
@@ -98,63 +136,121 @@ def construir_arbol_categorias():
 
 def construir_grafo_tienda():
     """
-    Construye y configura el grafo de la tienda con pasillos y conexiones.
-    Ahora incluye 4 cajas estratégicamente ubicadas.
+    Construye y configura el grafo de la tienda usando analogía de Google Maps.
+    
+    ANALOGÍA GOOGLE MAPS:
+    - Pasillos = Calles/Rutas de navegación (círculos pequeños)
+    - Estantes = Edificios/Destinos (rectángulos alargados)
+    - Cajas = Destino final
+    
+    ESTRUCTURA TIPO MAPA:
+    - Pasillo Central: Ruta principal horizontal
+    - Pasillos 1-3: Rutas verticales (norte-centro-sur)
+    - Estantes: Bloques rectangulares a los lados
     """
     global grafo_tienda
     grafo_tienda = Grafo()
     
+    # Definir RUTAS DE NAVEGACIÓN (pasillos)
     pasillos = {
-        "Entrada": 0.3,
-        "Pasillo 1": 0.2,
-        "Pasillo 2": 0.4,
-        "Pasillo 3": 0.1,
-        "Pasillo 4": 0.3,
-        "Pasillo 5": 0.5,
-        "Pasillo 6": 0.2,
-        "Pasillo 7": 0.4,
-        "Pasillo 8": 0.5,
-        "Caja 1": 0.6,  # Cerca de Pasillo 3 y 7
-        "Caja 2": 0.6,  # Cerca de Pasillo 6
-        "Caja 3": 0.6,  # Cerca de Pasillo 4
-        "Caja 4": 0.6,  # Cerca de Pasillo 8
+        "Entrada": 0.2,
+        "Pasillo Central": 0.2,  # Ruta principal horizontal
+        
+        # Pasillo 1 (Izquierda) - 3 segmentos
+        "Pasillo 1 Norte": 0.2,
+        "Pasillo 1 Centro": 0.2,
+        "Pasillo 1 Sur": 0.2,
+        
+        # Pasillo 2 (Centro) - 3 segmentos
+        "Pasillo 2 Norte": 0.2,
+        "Pasillo 2 Centro": 0.2,
+        "Pasillo 2 Sur": 0.2,
+        
+        # Pasillo 3 (Derecha) - 3 segmentos
+        "Pasillo 3 Norte": 0.2,
+        "Pasillo 3 Centro": 0.2,
+        "Pasillo 3 Sur": 0.2,
+        
+        # Cajas (4 en total)
+        "Caja 1": 0.6,
+        "Caja 2": 0.6,
+        "Caja 3": 0.6,
+        "Caja 4": 0.6,
     }
     
-    for pasillo, congestion in pasillos.items():
-        grafo_tienda.agregar_nodo(pasillo, congestion)
+    # Definir BLOQUES DE DESTINO (estantes)
+    estantes = {
+        "Estante Lácteos": 0.3,
+        "Estante Frutas": 0.2,
+        "Estante Verduras": 0.2,
+        "Estante Aseo": 0.3,
+        "Estante Limpieza": 0.3,
+        "Estante Granos": 0.2,
+        "Estante Pastas": 0.2,
+        "Estante Bebidas": 0.4,
+        "Estante Snacks": 0.3,
+        "Estante Panadería": 0.3,
+        "Estante Carnes": 0.4,
+        "Estante Congelados": 0.4,
+        "Estante Mascotas": 0.2,
+    }
     
+    # Agregar todos los nodos
+    for nodo, congestion in {**pasillos, **estantes}.items():
+        grafo_tienda.agregar_nodo(nodo, congestion)
+    
+    # CONEXIONES TIPO MAPA DE NAVEGACIÓN
     conexiones = [
-        # Conexiones de Entrada
-        ("Entrada", "Pasillo 1", 1),
-        ("Entrada", "Pasillo 4", 2),
+        # Entrada a Pasillo Central
+        ("Entrada", "Pasillo Central", 1),
         
-        # Conexiones entre pasillos - lado izquierdo
-        ("Pasillo 1", "Pasillo 2", 1),
-        ("Pasillo 2", "Pasillo 3", 1),
-        ("Pasillo 3", "Pasillo 7", 1),
+        # Pasillo Central a inicio de cada pasillo vertical
+        ("Pasillo Central", "Pasillo 1 Norte", 1),
+        ("Pasillo Central", "Pasillo 2 Norte", 1),
+        ("Pasillo Central", "Pasillo 3 Norte", 1),
         
-        # Conexiones entre pasillos - lado derecho
-        ("Pasillo 4", "Pasillo 5", 1),
-        ("Pasillo 5", "Pasillo 6", 1),
-        ("Pasillo 6", "Pasillo 8", 1),
+        # PASILLO 1 (flujo norte → centro → sur)
+        ("Pasillo 1 Norte", "Pasillo 1 Centro", 1),
+        ("Pasillo 1 Centro", "Pasillo 1 Sur", 1),
         
-        # Conexiones horizontales
-        ("Pasillo 1", "Pasillo 4", 2),
-        ("Pasillo 2", "Pasillo 5", 2),
-        ("Pasillo 3", "Pasillo 6", 2),
-        ("Pasillo 7", "Pasillo 8", 2),
+        # PASILLO 2 (flujo norte → centro → sur)
+        ("Pasillo 2 Norte", "Pasillo 2 Centro", 1),
+        ("Pasillo 2 Centro", "Pasillo 2 Sur", 1),
         
-        # Conexiones a las cajas
-        ("Pasillo 3", "Caja 1", 1),
-        ("Pasillo 7", "Caja 1", 1),
-        ("Pasillo 6", "Caja 2", 1),
-        ("Pasillo 4", "Caja 3", 2),
-        ("Pasillo 8", "Caja 4", 1),
+        # PASILLO 3 (flujo norte → centro → sur)
+        ("Pasillo 3 Norte", "Pasillo 3 Centro", 1),
+        ("Pasillo 3 Centro", "Pasillo 3 Sur", 1),
         
-        # Conexiones entre cajas para permitir rutas alternativas
-        ("Caja 1", "Caja 2", 2),
-        ("Caja 2", "Caja 4", 2),
-        ("Caja 3", "Caja 4", 2),
+        # Conexiones horizontales entre pasillos (para rutas alternativas)
+        ("Pasillo 1 Norte", "Pasillo 2 Norte", 2),
+        ("Pasillo 2 Norte", "Pasillo 3 Norte", 2),
+        ("Pasillo 1 Centro", "Pasillo 2 Centro", 2),
+        ("Pasillo 2 Centro", "Pasillo 3 Centro", 2),
+        ("Pasillo 1 Sur", "Pasillo 2 Sur", 2),
+        ("Pasillo 2 Sur", "Pasillo 3 Sur", 2),
+        
+        # ESTANTES conectados a pasillos (bloques de destino)
+        ("Pasillo 1 Norte", "Estante Lácteos", 0.5),
+        ("Pasillo 1 Norte", "Estante Aseo", 0.5),
+        ("Pasillo 1 Centro", "Estante Frutas", 0.5),
+        ("Pasillo 1 Centro", "Estante Limpieza", 0.5),
+        ("Pasillo 1 Sur", "Estante Verduras", 0.5),
+        ("Pasillo 1 Sur", "Estante Granos", 0.5),
+        
+        ("Pasillo 2 Norte", "Estante Pastas", 0.5),
+        ("Pasillo 2 Centro", "Estante Panadería", 0.5),
+        ("Pasillo 2 Sur", "Estante Bebidas", 0.5),
+        
+        ("Pasillo 3 Norte", "Estante Snacks", 0.5),
+        ("Pasillo 3 Centro", "Estante Carnes", 0.5),
+        ("Pasillo 3 Sur", "Estante Congelados", 0.5),
+        ("Pasillo 3 Sur", "Estante Mascotas", 0.5),
+        
+        # Pasillos a Cajas (4 cajas en total)
+        ("Pasillo 1 Sur", "Caja 1", 1),
+        ("Pasillo 2 Sur", "Caja 2", 1),
+        ("Pasillo 2 Sur", "Caja 3", 1),
+        ("Pasillo 3 Sur", "Caja 4", 1),
     ]
     
     for desde, hacia, peso in conexiones:
@@ -242,7 +338,7 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
                 productos_por_pasillo[pasillo] = []
             productos_por_pasillo[pasillo].append(producto)
     
-    # Lista de cajas disponibles
+    # Lista de cajas disponibles (ahora 4)
     cajas_disponibles = ["Caja 1", "Caja 2", "Caja 3", "Caja 4"]
     
     # Calcular top rutas (usando pasillo_inicio="Entrada")
@@ -273,22 +369,25 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
             if ruta_final and ruta_final[-1] not in cajas_disponibles:
                 ultimo_pasillo = ruta_final[-1]
                 
-                # Buscar la caja más cercana
-                mejor_caja = None
-                menor_costo_caja = float('inf')
-                mejor_ruta_caja = None
-                
+                # Calcular distancias a TODAS las cajas para encontrar la óptima
+                distancias_cajas = []
                 for caja in cajas_disponibles:
                     ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ultimo_pasillo, caja)
-                    if ruta_a_caja and costo_caja < menor_costo_caja:
-                        menor_costo_caja = costo_caja
-                        mejor_caja = caja
-                        mejor_ruta_caja = ruta_a_caja
+                    if ruta_a_caja:
+                        distancias_cajas.append({
+                            'caja': caja,
+                            'ruta': ruta_a_caja,
+                            'costo': costo_caja
+                        })
                 
-                # Agregar ruta a la caja más cercana
-                if mejor_ruta_caja:
-                    ruta_final.extend(mejor_ruta_caja[1:])  # Evitar duplicar el último pasillo
-                    costo_final += menor_costo_caja
+                # Ordenar por costo y seleccionar la más cercana
+                if distancias_cajas:
+                    distancias_cajas.sort(key=lambda x: x['costo'])
+                    mejor_opcion = distancias_cajas[0]
+                    
+                    # Agregar ruta a la caja más cercana
+                    ruta_final.extend(mejor_opcion['ruta'][1:])  # Evitar duplicar el último pasillo
+                    costo_final += mejor_opcion['costo']
             
             rutas_procesadas.append({
                 'id': i,
@@ -299,25 +398,38 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
             })
             
     else:
-        # Caso sin productos: ir de Entrada a la caja más cercana
-        mejor_caja = "Caja 1"  # Usar Caja 1 como default
-        menor_costo = float('inf')
-        mejor_ruta = None
-        
+        # Caso sin productos: calcular distancias a todas las cajas desde Entrada
+        distancias_cajas = []
         for caja in cajas_disponibles:
             ruta_directa, costo = grafo_tienda.ruta_mas_corta("Entrada", caja)
-            if ruta_directa and costo < menor_costo:
-                menor_costo = costo
-                mejor_caja = caja
-                mejor_ruta = ruta_directa
+            if ruta_directa:
+                distancias_cajas.append({
+                    'caja': caja,
+                    'ruta': ruta_directa,
+                    'costo': costo
+                })
         
-        rutas_procesadas = [{
-            'id': 0,
-            'nombre': 'Ruta Directa',
-            'ruta': mejor_ruta if mejor_ruta else ["Entrada", "Caja 1"],
-            'costo': round(menor_costo, 2) if mejor_ruta else 0,
-            'es_optima': True
-        }]
+        # Ordenar por costo y seleccionar la más cercana
+        if distancias_cajas:
+            distancias_cajas.sort(key=lambda x: x['costo'])
+            mejor_opcion = distancias_cajas[0]
+            
+            rutas_procesadas = [{
+                'id': 0,
+                'nombre': 'Ruta Directa',
+                'ruta': mejor_opcion['ruta'],
+                'costo': round(mejor_opcion['costo'], 2),
+                'es_optima': True
+            }]
+        else:
+            # Fallback extremo si no hay rutas válidas
+            rutas_procesadas = [{
+                'id': 0,
+                'nombre': 'Ruta Directa',
+                'ruta': ["Entrada", "Caja 1"],
+                'costo': 0,
+                'es_optima': True
+            }]
     
     # Seleccionar la primera como activa por defecto
     ruta_activa = rutas_procesadas[0] if rutas_procesadas else None
@@ -330,41 +442,109 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
         'productos_por_pasillo': productos_por_pasillo,
         'graph_structure': {
             'nodes': [
-                {'id': 'Entrada', 'label': 'Entrada', 'type': 'start', 'icon': '🚪'},
-                {'id': 'Pasillo 1', 'label': 'Lácteos', 'type': 'aisle', 'icon': '🥛'},
-                {'id': 'Pasillo 2', 'label': 'Aseo', 'type': 'aisle', 'icon': '🧼'},
-                {'id': 'Pasillo 3', 'label': 'Granos', 'type': 'aisle', 'icon': '🌾'},
-                {'id': 'Pasillo 4', 'label': 'Bebidas', 'type': 'aisle', 'icon': '🥤'},
-                {'id': 'Pasillo 5', 'label': 'Snacks', 'type': 'aisle', 'icon': '🍿'},
-                {'id': 'Pasillo 6', 'label': 'Panadería', 'type': 'aisle', 'icon': '🍞'},
-                {'id': 'Pasillo 7', 'label': 'Ropa', 'type': 'aisle', 'icon': '👕'},
-                {'id': 'Pasillo 8', 'label': 'Electro', 'type': 'aisle', 'icon': '📺'},
-                {'id': 'Caja 1', 'label': 'Caja 1', 'type': 'end', 'icon': '🛒'},
-                {'id': 'Caja 2', 'label': 'Caja 2', 'type': 'end', 'icon': '🛒'},
-                {'id': 'Caja 3', 'label': 'Caja 3', 'type': 'end', 'icon': '🛒'},
-                {'id': 'Caja 4', 'label': 'Caja 4', 'type': 'end', 'icon': '🛒'}
+                # ENTRADA
+                {'id': 'Entrada', 'label': '🚪', 'type': 'start', 'icon': '🚪', 'position': {'x': 0, 'y': -600}},
+                
+                # PASILLO CENTRAL (ruta principal horizontal)
+                {'id': 'Pasillo Central', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': -400}},
+                
+                # PASILLO 1 (izquierda) - 3 segmentos verticales
+                {'id': 'Pasillo 1 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': -200}},
+                {'id': 'Pasillo 1 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': 0}},
+                {'id': 'Pasillo 1 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': 200}},
+                
+                # PASILLO 2 (centro) - 3 segmentos verticales
+                {'id': 'Pasillo 2 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': -200}},
+                {'id': 'Pasillo 2 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': 0}},
+                {'id': 'Pasillo 2 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': 200}},
+                
+                # PASILLO 3 (derecha) - 3 segmentos verticales
+                {'id': 'Pasillo 3 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': -200}},
+                {'id': 'Pasillo 3 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': 0}},
+                {'id': 'Pasillo 3 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': 200}},
+                
+                # BLOQUES (Estantes) - PASILLO 1 OESTE (lado izquierdo)
+                {'id': 'Estante Lácteos', 'label': 'Lácteos', 'type': 'shelf', 'icon': '🥛', 'position': {'x': -450, 'y': -200}},
+                {'id': 'Estante Frutas', 'label': 'Frutas', 'type': 'shelf', 'icon': '🍎', 'position': {'x': -450, 'y': 0}},
+                {'id': 'Estante Verduras', 'label': 'Verduras', 'type': 'shelf', 'icon': '🥬', 'position': {'x': -450, 'y': 200}},
+                
+                # BLOQUES - PASILLO 1 ESTE (lado derecho)
+                {'id': 'Estante Aseo', 'label': 'Aseo', 'type': 'shelf', 'icon': '🧼', 'position': {'x': -150, 'y': -200}},
+                {'id': 'Estante Limpieza', 'label': 'Limpieza', 'type': 'shelf', 'icon': '🧹', 'position': {'x': -150, 'y': 0}},
+                {'id': 'Estante Granos', 'label': 'Granos', 'type': 'shelf', 'icon': '🌾', 'position': {'x': -150, 'y': 200}},
+                
+                # BLOQUES - PASILLO 2 OESTE
+                {'id': 'Estante Pastas', 'label': 'Pastas', 'type': 'shelf', 'icon': '🍝', 'position': {'x': -150, 'y': -200}},
+                {'id': 'Estante Panadería', 'label': 'Panadería', 'type': 'shelf', 'icon': '🍞', 'position': {'x': -150, 'y': 0}},
+                {'id': 'Estante Bebidas', 'label': 'Bebidas', 'type': 'shelf', 'icon': '🥤', 'position': {'x': -150, 'y': 200}},
+                
+                # BLOQUES - PASILLO 3 OESTE
+                {'id': 'Estante Snacks', 'label': 'Snacks', 'type': 'shelf', 'icon': '🍿', 'position': {'x': 150, 'y': -200}},
+                {'id': 'Estante Carnes', 'label': 'Carnes', 'type': 'shelf', 'icon': '🥩', 'position': {'x': 150, 'y': 0}},
+                {'id': 'Estante Congelados', 'label': 'Congelados', 'type': 'shelf', 'icon': '🧊', 'position': {'x': 150, 'y': 200}},
+                
+                # BLOQUES - PASILLO 3 ESTE
+                {'id': 'Estante Mascotas', 'label': 'Mascotas', 'type': 'shelf', 'icon': '🐕', 'position': {'x': 450, 'y': 200}},
+                
+                # CAJAS (4 al final de las rutas)
+                {'id': 'Caja 1', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -300, 'y': 450}},
+                {'id': 'Caja 2', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -100, 'y': 450}},
+                {'id': 'Caja 3', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 100, 'y': 450}},
+                {'id': 'Caja 4', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 300, 'y': 450}}
             ],
             'edges': [
-                {'from': 'Entrada', 'to': 'Pasillo 1', 'weight': 1},
-                {'from': 'Entrada', 'to': 'Pasillo 4', 'weight': 2},
-                {'from': 'Pasillo 1', 'to': 'Pasillo 2', 'weight': 1},
-                {'from': 'Pasillo 2', 'to': 'Pasillo 3', 'weight': 1},
-                {'from': 'Pasillo 3', 'to': 'Pasillo 7', 'weight': 1},
-                {'from': 'Pasillo 4', 'to': 'Pasillo 5', 'weight': 1},
-                {'from': 'Pasillo 5', 'to': 'Pasillo 6', 'weight': 1},
-                {'from': 'Pasillo 6', 'to': 'Pasillo 8', 'weight': 1},
-                {'from': 'Pasillo 1', 'to': 'Pasillo 4', 'weight': 2},
-                {'from': 'Pasillo 2', 'to': 'Pasillo 5', 'weight': 2},
-                {'from': 'Pasillo 3', 'to': 'Pasillo 6', 'weight': 2},
-                {'from': 'Pasillo 7', 'to': 'Pasillo 8', 'weight': 2},
-                {'from': 'Pasillo 3', 'to': 'Caja 1', 'weight': 1},
-                {'from': 'Pasillo 7', 'to': 'Caja 1', 'weight': 1},
-                {'from': 'Pasillo 6', 'to': 'Caja 2', 'weight': 1},
-                {'from': 'Pasillo 4', 'to': 'Caja 3', 'weight': 2},
-                {'from': 'Pasillo 8', 'to': 'Caja 4', 'weight': 1},
-                {'from': 'Caja 1', 'to': 'Caja 2', 'weight': 2},
-                {'from': 'Caja 2', 'to': 'Caja 4', 'weight': 2},
-                {'from': 'Caja 3', 'to': 'Caja 4', 'weight': 2}
+                # Entrada a Pasillo Central
+                {'from': 'Entrada', 'to': 'Pasillo Central', 'weight': 1},
+                
+                # Pasillo Central a inicio de cada pasillo
+                {'from': 'Pasillo Central', 'to': 'Pasillo 1 Norte', 'weight': 1},
+                {'from': 'Pasillo Central', 'to': 'Pasillo 2 Norte', 'weight': 1},
+                {'from': 'Pasillo Central', 'to': 'Pasillo 3 Norte', 'weight': 1},
+                
+                # PASILLO 1 (flujo norte → centro → sur)
+                {'from': 'Pasillo 1 Norte', 'to': 'Pasillo 1 Centro', 'weight': 1},
+                {'from': 'Pasillo 1 Centro', 'to': 'Pasillo 1 Sur', 'weight': 1},
+                
+                # PASILLO 2 (flujo norte → centro → sur)
+                {'from': 'Pasillo 2 Norte', 'to': 'Pasillo 2 Centro', 'weight': 1},
+                {'from': 'Pasillo 2 Centro', 'to': 'Pasillo 2 Sur', 'weight': 1},
+                
+                # PASILLO 3 (flujo norte → centro → sur)
+                {'from': 'Pasillo 3 Norte', 'to': 'Pasillo 3 Centro', 'weight': 1},
+                {'from': 'Pasillo 3 Centro', 'to': 'Pasillo 3 Sur', 'weight': 1},
+                
+                # Conexiones horizontales entre pasillos
+                {'from': 'Pasillo 1 Norte', 'to': 'Pasillo 2 Norte', 'weight': 2},
+                {'from': 'Pasillo 2 Norte', 'to': 'Pasillo 3 Norte', 'weight': 2},
+                {'from': 'Pasillo 1 Centro', 'to': 'Pasillo 2 Centro', 'weight': 2},
+                {'from': 'Pasillo 2 Centro', 'to': 'Pasillo 3 Centro', 'weight': 2},
+                {'from': 'Pasillo 1 Sur', 'to': 'Pasillo 2 Sur', 'weight': 2},
+                {'from': 'Pasillo 2 Sur', 'to': 'Pasillo 3 Sur', 'weight': 2},
+                
+                # BLOQUES en PASILLO 1
+                {'from': 'Pasillo 1 Norte', 'to': 'Estante Lácteos', 'weight': 0.5},
+                {'from': 'Pasillo 1 Norte', 'to': 'Estante Aseo', 'weight': 0.5},
+                {'from': 'Pasillo 1 Centro', 'to': 'Estante Frutas', 'weight': 0.5},
+                {'from': 'Pasillo 1 Centro', 'to': 'Estante Limpieza', 'weight': 0.5},
+                {'from': 'Pasillo 1 Sur', 'to': 'Estante Verduras', 'weight': 0.5},
+                {'from': 'Pasillo 1 Sur', 'to': 'Estante Granos', 'weight': 0.5},
+                
+                # BLOQUES en PASILLO 2
+                {'from': 'Pasillo 2 Norte', 'to': 'Estante Pastas', 'weight': 0.5},
+                {'from': 'Pasillo 2 Centro', 'to': 'Estante Panadería', 'weight': 0.5},
+                {'from': 'Pasillo 2 Sur', 'to': 'Estante Bebidas', 'weight': 0.5},
+                
+                # BLOQUES en PASILLO 3
+                {'from': 'Pasillo 3 Norte', 'to': 'Estante Snacks', 'weight': 0.5},
+                {'from': 'Pasillo 3 Centro', 'to': 'Estante Carnes', 'weight': 0.5},
+                {'from': 'Pasillo 3 Sur', 'to': 'Estante Congelados', 'weight': 0.5},
+                {'from': 'Pasillo 3 Sur', 'to': 'Estante Mascotas', 'weight': 0.5},
+                
+                # Pasillos a Cajas (4 cajas)
+                {'from': 'Pasillo 1 Sur', 'to': 'Caja 1', 'weight': 1},
+                {'from': 'Pasillo 2 Sur', 'to': 'Caja 2', 'weight': 1},
+                {'from': 'Pasillo 2 Sur', 'to': 'Caja 3', 'weight': 1},
+                {'from': 'Pasillo 3 Sur', 'to': 'Caja 4', 'weight': 1}
             ]
         }
     }

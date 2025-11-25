@@ -164,15 +164,23 @@
                 </div>
                 <div class="legend-item">
                     <span class="legend-icon" style="background: #667eea;">📦</span>
-                    <span class="legend-text">Con productos</span>
+                    <span class="legend-text">Productos seleccionados</span>
                 </div>
                 <div class="legend-item">
-                    <span class="legend-icon" style="background: #6c757d;">➡️</span>
-                    <span class="legend-text">Paso intermedio</span>
+                    <span class="legend-icon" style="background: #dc3545;">💳</span>
+                    <span class="legend-text">Cajas de pago</span>
                 </div>
                 <div class="legend-item">
-                    <span class="legend-icon" style="background: #dc3545;">🛒</span>
-                    <span class="legend-text">Cajas</span>
+                    <div style="width: 40px; height: 4px; background: #4285F4; border-radius: 2px; margin-right: 0.75rem;"></div>
+                    <span class="legend-text">Ruta óptima</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 40px; height: 3px; background: #34A853; border-radius: 2px; margin-right: 0.75rem;"></div>
+                    <span class="legend-text">Alternativa 1</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 40px; height: 3px; background: #FBBC04; border-radius: 2px; margin-right: 0.75rem;"></div>
+                    <span class="legend-text">Alternativa 2</span>
                 </div>
             </div>
         </div>
@@ -186,36 +194,107 @@
         let rutaActiva = null;
         let network = null;
 
-        // Configuración de colores
+        // Configuración de colores (estilo Google Maps)
         const COLORS = {
             start: '#28a745',
             end: '#dc3545',
-            aisle: '#6c757d',
-            hasProducts: '#667eea',
+            aisle: '#95a5a6',      // Pasillos de tránsito (gris)
+            shelf: '#6c757d',       // Estantes sin productos (gris oscuro)
+            hasProducts: '#667eea', // Estantes con productos (morado)
+            checkout_zone: '#ff8c00', // Zona de cajas (naranja)
             transit: '#95a5a6',
-            optimal: '#667eea',
-            alternative1: '#28a745',
-            alternative2: '#f39c12',
-            baseEdge: '#dee2e6'
+            // Colores de rutas estilo Google Maps
+            optimal: '#4285F4',      // Azul Google Maps
+            alternative1: '#34A853', // Verde Google
+            alternative2: '#FBBC04', // Amarillo Google
+            baseEdge: '#f0f0f0'      // Gris muy claro para aristas no usadas
         };
 
         // Inicializar grafo con Vis.js Network
         function inicializarGrafo() {
             const container = document.getElementById('network-graph');
             
-            // Preparar nodos desde graphStructure
+            // Preparar nodos desde graphStructure con ESTILOS GOOGLE MAPS
             const nodes = new vis.DataSet(
                 graphStructure.nodes.map(node => {
                     const tieneProductos = productosPorPasillo[node.id] && productosPorPasillo[node.id].length > 0;
+                    
+                    // Determinar color según tipo de nodo
                     let color = COLORS[node.type];
-                    if (tieneProductos && node.type === 'aisle') {
+                    if (tieneProductos && node.type === 'shelf') {
                         color = COLORS.hasProducts;
+                    } else if (node.type === 'shelf') {
+                        color = COLORS.shelf;
+                    }
+                    
+                    // GOOGLE MAPS STYLING: Formas personalizadas
+                    let shape, size, borderWidth, labelConfig;
+                    
+                    if (node.type === 'shelf') {
+                        // ESTANTES = RECTÁNGULOS ALARGADOS (como edificios en Google Maps)
+                        shape = 'box';
+                        size = tieneProductos ? 25 : 20;
+                        borderWidth = 1;
+                        labelConfig = {
+                            color: '#ffffff',
+                            size: 11,
+                            face: 'Arial',
+                            bold: false
+                        };
+                    } else if (node.type === 'aisle') {
+                        // PASILLOS = CÍRCULOS PEQUEÑOS/PUNTOS (intersecciones minimalistas)
+                        shape = 'dot';
+                        size = 8;  // Muy pequeños, casi puntos
+                        borderWidth = 0;
+                        labelConfig = {
+                            color: '#666',
+                            size: 0  // Sin label visible
+                        };
+                        color = '#e0e0e0';  // Gris muy claro, casi invisible
+                    } else if (node.type === 'start') {
+                        // ENTRADA = CÍRCULO VERDE
+                        shape = 'dot';
+                        size = 18;
+                        borderWidth = 3;
+                        labelConfig = {
+                            color: '#ffffff',
+                            size: 16,
+                            face: 'Arial',
+                            bold: true
+                        };
+                    } else if (node.type === 'end') {
+                        // CAJAS = CÍRCULO ROJO
+                        shape = 'dot';
+                        size = 16;
+                        borderWidth = 2;
+                        labelConfig = {
+                            color: '#ffffff',
+                            size: 14,
+                            face: 'Arial',
+                            bold: true
+                        };
+                    } else {
+                        // Default
+                        shape = 'dot';
+                        size = 15;
+                        borderWidth = 2;
+                        labelConfig = {
+                            color: '#ffffff',
+                            size: 12,
+                            face: 'Arial',
+                            bold: true
+                        };
                     }
                     
                     return {
                         id: node.id,
-                        label: `${node.icon}\n${node.label}`,
+                        label: node.label || '',  // Labels minimalistas
                         title: node.id, // Tooltip
+                        x: node.position.x,
+                        y: node.position.y,
+                        fixed: true,
+                        shape: shape,
+                        size: size,
                         color: {
                             background: color,
                             border: color,
@@ -224,88 +303,81 @@
                                 border: '#2c3e50'
                             }
                         },
-                        font: {
-                            color: '#ffffff',
-                            size: 14,
-                            face: 'Arial',
-                            bold: true
-                        },
-                        shape: node.type === 'start' ? 'triangle' : (node.type === 'end' ? 'box' : 'circle'),
-                        size: tieneProductos ? 35 : 25,
-                        borderWidth: 3,
-                        shadow: true
+                        borderWidth: borderWidth,
+                        font: labelConfig
                     };
                 })
             );
-
-            // Preparar aristas desde graphStructure
+            
+            // Preparar aristas desde graphStructure con ESTILOS GOOGLE MAPS
             const edges = new vis.DataSet(
                 graphStructure.edges.map(edge => ({
                     from: edge.from,
                     to: edge.to,
                     color: {
-                        color: COLORS.baseEdge,
-                        highlight: '#667eea'
+                        color: COLORS.baseEdge,  // Gris muy claro
+                        opacity: 0.4
                     },
-                    width: 2,
+                    width: 1,  // LÍNEAS MUY DELGADAS (Google Maps style)
                     smooth: {
                         enabled: true,
-                        type: 'continuous'
+                        type: 'continuous',
+                        roundness: 0.3
                     },
-                    label: String(edge.weight),
+                    arrows: {
+                        to: {
+                            enabled: false  // Sin flechas
+                        }
+                    },
+                    // CRÍTICO: Ocultar weights visualmente
+                    label: undefined,
                     font: {
-                        size: 10,
-                        color: '#7f8c8d'
+                        size: 0  // No mostrar peso
                     }
                 }))
             );
-
+            
             const data = { nodes, edges };
-
+            
+            // Opciones de visualización MINIMALISTAS
             const options = {
                 physics: {
-                    enabled: true,
-                    solver: 'forceAtlas2Based',
-                    forceAtlas2Based: {
-                        gravitationalConstant: -50,
-                        centralGravity: 0.01,
-                        springLength: 200,
-                        springConstant: 0.08,
-                        damping: 0.4,
-                        avoidOverlap: 0.5
-                    },
-                    stabilization: {
-                        enabled: true,
-                        iterations: 200,
-                        updateInterval: 25
-                    }
+                    enabled: false  // Posiciones fijas
                 },
                 interaction: {
-                    hover: true,
-                    zoomView: true,
+                    dragNodes: false,
                     dragView: true,
-                    dragNodes: true,
-                    tooltipDelay: 100
+                    zoomView: true,
+                    hover: true
+                },
+                nodes: {
+                    shadow: false  // Sin sombras por defecto para limpieza
                 },
                 edges: {
                     arrows: {
                         to: {
                             enabled: false
                         }
+                    },
+                    smooth: {
+                        enabled: true,
+                        type: 'continuous'
+                    },
+                    // Ocultar labels de edges
+                    font: {
+                        size: 0
                     }
                 },
                 layout: {
-                    improvedLayout: true,
+                    improvedLayout: false,
                     hierarchical: false
                 }
             };
 
             network = new vis.Network(container, data, options);
 
-            // Esperar a que la física se estabilice
-            network.on('stabilizationIterationsDone', function () {
-                network.setOptions({ physics: false });
-            });
+            // Ajustar vista inicial para mostrar todo el mapa
+            network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
 
             // Seleccionar primera ruta
             if (rutasDisponibles && rutasDisponibles.length > 0) {
@@ -314,8 +386,16 @@
         }
 
         function seleccionarRuta(id) {
+            console.log('🔍 Seleccionando ruta ID:', id);  // DEBUG
+            
             const ruta = rutasDisponibles.find(r => r.id === id);
-            if (!ruta) return;
+            if (!ruta) {
+                console.error('❌ Ruta no encontrada:', id);
+                console.log('Rutas disponibles:', rutasDisponibles);
+                return;
+            }
+            
+            console.log('✅ Ruta encontrada:', ruta);  // DEBUG
             
             rutaActiva = ruta;
             
@@ -328,7 +408,8 @@
             document.getElementById('routeDistance').textContent = ruta.costo;
             document.getElementById('routeSteps').textContent = ruta.ruta.length;
             
-            // Resaltar ruta en el grafo
+            // CRÍTICO: Resaltar ruta en el grafo
+            console.log('🎨 Resaltando ruta en el grafo...');
             resaltarRutaEnGrafo(ruta);
             actualizarTimeline(ruta.ruta);
         }
@@ -339,23 +420,32 @@
             const nodes = network.body.data.nodes;
             const edges = network.body.data.edges;
 
-            // Resetear todos los bordes a color base
+            // PASO 1: Resetear TODAS las aristas - sin flechas, color base muy tenue
             edges.forEach(edge => {
                 edges.update({
                     id: edge.id,
-                    color: { color: COLORS.baseEdge },
-                    width: 2,
-                    arrows: { to: { enabled: false } }
+                    color: { 
+                        color: '#f0f0f0',  // Gris muy claro para aristas no usadas
+                        opacity: 0.3
+                    },
+                    width: 1,
+                    arrows: { to: { enabled: false } },  // SIN flechas en ninguna arista
+                    dashes: false,
+                    shadow: false
                 });
             });
 
-            // Resetear todos los nodos
+            // PASO 2: Resetear todos los nodos a su estado original
             nodes.forEach(node => {
                 const nodeData = graphStructure.nodes.find(n => n.id === node.id);
                 const tieneProductos = productosPorPasillo[node.id] && productosPorPasillo[node.id].length > 0;
+                
+                // Determinar color según tipo
                 let color = COLORS[nodeData.type];
-                if (tieneProductos && nodeData.type === 'aisle') {
+                if (tieneProductos && nodeData.type === 'shelf') {
                     color = COLORS.hasProducts;
+                } else if (nodeData.type === 'shelf') {
+                    color = COLORS.shelf;
                 }
                 
                 nodes.update({
@@ -365,61 +455,125 @@
                         border: color
                     },
                     borderWidth: 3,
-                    size: tieneProductos ? 35 : 25
+                    size: tieneProductos ? 35 : (nodeData.type === 'shelf' || nodeData.type === 'checkout_zone' ? 28 : 22),
+                    shadow: false
                 });
             });
 
-            // Resaltar la ruta seleccionada
+            // PASO 3: Dibujar LÍNEA CONTINUA para la ruta (estilo Google Maps)
             const rutaPath = ruta.ruta;
+            
+            // Determinar color de la ruta según tipo
+            let routeColor, routeWidth;
+            if (ruta.es_optima) {
+                routeColor = '#4285F4';  // Azul Google Maps
+                routeWidth = 10;  // Más gruesa para mejor visibilidad
+            } else if (ruta.id === 1) {
+                routeColor = '#34A853';  // Verde alternativa 1
+                routeWidth = 8;
+            } else {
+                routeColor = '#FBBC04';  // Amarillo alternativa 2
+                routeWidth = 8;
+            }
+            
+            console.log(`🎨 Dibujando ruta: ${ruta.nombre}, Color: ${routeColor}, Ancho: ${routeWidth}px`);
+            
+            // Dibujar línea continua a través de todos los segmentos
             for (let i = 0; i < rutaPath.length - 1; i++) {
                 const desde = rutaPath[i];
                 const hacia = rutaPath[i + 1];
                 
-                // Encontrar la arista
-                const edgeId = edges.get({
+                // Buscar la arista base (puede estar en cualquier dirección)
+                const edgeMatches = edges.get({
                     filter: item => (item.from === desde && item.to === hacia) || 
                                    (item.from === hacia && item.to === desde)
-                })[0];
+                });
 
-                if (edgeId) {
-                    const color = ruta.es_optima ? COLORS.optimal : 
-                                (ruta.id === 1 ? COLORS.alternative1 : COLORS.alternative2);
+                if (edgeMatches && edgeMatches.length > 0) {
+                    const edgeOriginal = edgeMatches[0];
                     
+                    // Actualizar arista con línea continua gruesa (SIN FLECHAS)
                     edges.update({
-                        id: edgeId.id,
+                        id: edgeOriginal.id,
+                        from: desde,
+                        to: hacia,
                         color: {
-                            color: color,
-                            highlight: color
+                            color: routeColor,
+                            opacity: 1
                         },
-                        width: ruta.es_optima ? 6 : 4,
+                        width: routeWidth,
                         arrows: {
-                            to: {
-                                enabled: true,
-                                scaleFactor: 0.5
-                            }
+                            to: { enabled: false }  // NO flechas, solo línea continua
+                        },
+                        smooth: {
+                            enabled: true,
+                            type: 'continuous',
+                            roundness: 0.5
+                        },
+                        dashes: false,
+                        shadow: {
+                            enabled: true,
+                            color: routeColor,
+                            size: 8,
+                            x: 0,
+                            y: 0
                         }
                     });
                 }
             }
 
-            // Resaltar nodos en la ruta
-            rutaPath.forEach(nodeId => {
+            // PASO 4: Resaltar nodos en la ruta con efecto de pulso y NÚMEROS DE PASO
+            rutaPath.forEach((nodeId, index) => {
                 const nodeData = graphStructure.nodes.find(n => n.id === nodeId);
                 const tieneProductos = productosPorPasillo[nodeId] && productosPorPasillo[nodeId].length > 0;
+                const esInicio = index === 0;
+                const esFin = index === rutaPath.length - 1;
                 
                 let color = COLORS[nodeData.type];
-                if (tieneProductos && nodeData.type === 'aisle') {
+                if (tieneProductos && nodeData.type === 'shelf') {
                     color = COLORS.hasProducts;
+                } else if (nodeData.type === 'shelf') {
+                    color = COLORS.shelf;
                 }
+                
+                // Nodos de inicio y fin con borde especial
+                let borderColor = '#2c3e50';
+                let borderWidth = 5;
+                if (esInicio) {
+                    borderColor = '#4285F4';  // Azul para inicio
+                    borderWidth = 6;
+                } else if (esFin) {
+                    borderColor = '#EA4335';  // Rojo para fin
+                    borderWidth = 6;
+                }
+                
+                // AGREGAR NÚMERO DE PASO al label para mejor flujo visual
+                const stepNumber = index + 1;
+                const originalLabel = `${nodeData.icon}\n${nodeData.label}`;
+                const labelWithStep = `${stepNumber}. ${nodeData.icon}\n${nodeData.label}`;
                 
                 nodes.update({
                     id: nodeId,
-                    borderWidth: 5,
+                    label: labelWithStep,  // Incluir número de paso
+                    borderWidth: borderWidth,
                     color: {
                         background: color,
-                        border: '#2c3e50'
+                        border: borderColor
                     },
-                    size: tieneProductos ? 40 : 30
+                    size: tieneProductos ? 40 : (nodeData.type === 'shelf' || nodeData.type === 'checkout_zone' ? 33 : 27),
+                    shadow: {
+                        enabled: true,
+                        color: borderColor,
+                        size: 10,
+                        x: 0,
+                        y: 0
+                    },
+                    font: {
+                        color: '#ffffff',
+                        size: 14,
+                        face: 'Arial',
+                        bold: true
+                    }
                 });
             });
         }
@@ -517,8 +671,29 @@
             });
         });
 
-        // Inicializar cuando el DOM esté listo
-        document.addEventListener('DOMContentLoaded', inicializarGrafo);
+        // Inicialización cuando el DOM está listo
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('═══════════════════════════════════════');
+            console.log('📊 DEBUG: Datos de rutas cargados');
+            console.log('═══════════════════════════════════════');
+            console.log('Total de rutas disponibles:', rutasDisponibles.length);
+            console.log('Rutas:', rutasDisponibles);
+            
+            rutasDisponibles.forEach((ruta, index) => {
+                console.log(`\nRuta ${index}:`);
+                console.log('  - ID:', ruta.id);
+                console.log('  - Nombre:', ruta.nombre);
+                console.log('  - Es óptima:', ruta.es_optima);
+                console.log('  - Costo:', ruta.costo);
+                console.log('  - Pasos:', ruta.ruta.length);
+                console.log('  - Camino:', ruta.ruta.join(' → '));
+            });
+            
+            console.log('\n📊 Productos por pasillo:', productosPorPasillo);
+            console.log('═══════════════════════════════════════\n');
+            
+            inicializarGrafo();
+        });
     </script>
     {% else %}
     <!-- Sin ruta -->
