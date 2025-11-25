@@ -8,6 +8,11 @@
     <title>Navegación por Tienda 🗺️</title>
     <link rel="stylesheet" href="{% static 'grafos/css/styles.css' %}">
     <link rel="stylesheet" href="{% static 'grafos/css/map-view.css' %}">
+    
+    <!-- Vis.js Network for graph visualization -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link href="https://unpkg.com/vis-network/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
+    
     <script src="{% static 'grafos/js/shopping.js' %}" defer></script>
 </head>
 <body class="map-view-body">
@@ -145,51 +150,9 @@
                 </div>
             </div>
 
-            <!-- Contenedor del Mapa SVG -->
+            <!-- Contenedor del Grafo (Vis.js Network) -->
             <div class="map-canvas" id="mapCanvas">
-                <svg id="store-map" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
-                    <defs>
-                        <!-- Gradientes -->
-                        <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-                        </linearGradient>
-                        
-                        <!-- Sombras -->
-                        <filter id="glow">
-                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                            <feMerge>
-                                <feMergeNode in="coloredBlur"/>
-                                <feMergeNode in="SourceGraphic"/>
-                            </feMerge>
-                        </filter>
-                        
-                        <!-- Marcador de dirección -->
-                        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                            <polygon points="0 0, 10 3, 0 6" fill="#667eea" />
-                        </marker>
-                    </defs>
-                    
-                    <!-- Fondo de la tienda -->
-                    <rect x="50" y="50" width="1100" height="700" rx="20" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2"/>
-                    
-                    <!-- Grid de referencia -->
-                    <g id="grid-lines" opacity="0.1">
-                        <!-- Se genera con JS -->
-                    </g>
-                    
-                    <!-- Conexiones base del grafo -->
-                    <g id="map-connections"></g>
-                    
-                    <!-- Rutas activas -->
-                    <g id="active-routes"></g>
-                    
-                    <!-- Nodos (pasillos) -->
-                    <g id="map-nodes"></g>
-                    
-                    <!-- Labels flotantes -->
-                    <g id="map-labels"></g>
-                </svg>
+                <div id="network-graph" style="width: 100%; height: 100%;"></div>
             </div>
 
             <!-- Leyenda -->
@@ -219,139 +182,135 @@
         // Datos del servidor
         const productosPorPasillo = {{ ruta_resultado.productos_por_pasillo|to_json }};
         const rutasDisponibles = {{ ruta_resultado.rutas|to_json }};
+        const graphStructure = {{ ruta_resultado.graph_structure|to_json }};
         let rutaActiva = null;
-        let zoomLevel = 1;
+        let network = null;
 
-        // Configuración del mapa con coordenadas mejoradas - Ahora con 4 cajas
-        const nodosMapa = {
-            "Entrada": { x: 600, y: 700, label: "Entrada", type: "start", icon: "🚪" },
-            "Pasillo 1": { x: 300, y: 550, label: "Lácteos", type: "aisle", icon: "🥛" },
-            "Pasillo 2": { x: 300, y: 400, label: "Aseo", type: "aisle", icon: "🧼" },
-            "Pasillo 3": { x: 300, y: 250, label: "Granos", type: "aisle", icon: "🌾" },
-            "Pasillo 4": { x: 900, y: 550, label: "Bebidas", type: "aisle", icon: "🥤" },
-            "Pasillo 5": { x: 900, y: 400, label: "Snacks", type: "aisle", icon: "🍿" },
-            "Pasillo 6": { x: 900, y: 250, label: "Panadería", type: "aisle", icon: "🍞" },
-            "Pasillo 7": { x: 150, y: 100, label: "Ropa", type: "aisle", icon: "👕" },
-            "Pasillo 8": { x: 1050, y: 100, label: "Electro", type: "aisle", icon: "📺" },
-            "Caja 1": { x: 300, y: 100, label: "Caja 1", type: "end", icon: "🛒" },
-            "Caja 2": { x: 900, y: 100, label: "Caja 2", type: "end", icon: "🛒" },
-            "Caja 3": { x: 1000, y: 550, label: "Caja 3", type: "end", icon: "🛒" },
-            "Caja 4": { x: 1050, y: 100, label: "Caja 4", type: "end", icon: "🛒" }
+        // Configuración de colores
+        const COLORS = {
+            start: '#28a745',
+            end: '#dc3545',
+            aisle: '#6c757d',
+            hasProducts: '#667eea',
+            transit: '#95a5a6',
+            optimal: '#667eea',
+            alternative1: '#28a745',
+            alternative2: '#f39c12',
+            baseEdge: '#dee2e6'
         };
 
-        const conexionesBase = [
-            // Conexiones de Entrada
-            ["Entrada", "Pasillo 1"], ["Entrada", "Pasillo 4"],
-            // Conexiones entre pasillos - lado izquierdo
-            ["Pasillo 1", "Pasillo 2"], ["Pasillo 2", "Pasillo 3"],
-            ["Pasillo 3", "Pasillo 7"],
-            // Conexiones entre pasillos - lado derecho
-            ["Pasillo 4", "Pasillo 5"], ["Pasillo 5", "Pasillo 6"],
-            ["Pasillo 6", "Pasillo 8"],
-            // Conexiones horizontales
-            ["Pasillo 1", "Pasillo 4"], ["Pasillo 2", "Pasillo 5"],
-            ["Pasillo 3", "Pasillo 6"], ["Pasillo 7", "Pasillo 8"],
-            // Conexiones a las cajas
-            ["Pasillo 3", "Caja 1"], ["Pasillo 7", "Caja 1"],
-            ["Pasillo 6", "Caja 2"], ["Pasillo 4", "Caja 3"],
-            ["Pasillo 8", "Caja 4"],
-            // Conexiones entre cajas
-            ["Caja 1", "Caja 2"], ["Caja 2", "Caja 4"],
-            ["Caja 3", "Caja 4"]
-        ];
-
-        // Inicializar mapa
-        function inicializarMapa() {
-            dibujarGrid();
-            dibujarConexiones();
-            dibujarNodos();
+        // Inicializar grafo con Vis.js Network
+        function inicializarGrafo() {
+            const container = document.getElementById('network-graph');
             
+            // Preparar nodos desde graphStructure
+            const nodes = new vis.DataSet(
+                graphStructure.nodes.map(node => {
+                    const tieneProductos = productosPorPasillo[node.id] && productosPorPasillo[node.id].length > 0;
+                    let color = COLORS[node.type];
+                    if (tieneProductos && node.type === 'aisle') {
+                        color = COLORS.hasProducts;
+                    }
+                    
+                    return {
+                        id: node.id,
+                        label: `${node.icon}\n${node.label}`,
+                        title: node.id, // Tooltip
+                        color: {
+                            background: color,
+                            border: color,
+                            highlight: {
+                                background: color,
+                                border: '#2c3e50'
+                            }
+                        },
+                        font: {
+                            color: '#ffffff',
+                            size: 14,
+                            face: 'Arial',
+                            bold: true
+                        },
+                        shape: node.type === 'start' ? 'triangle' : (node.type === 'end' ? 'box' : 'circle'),
+                        size: tieneProductos ? 35 : 25,
+                        borderWidth: 3,
+                        shadow: true
+                    };
+                })
+            );
+
+            // Preparar aristas desde graphStructure
+            const edges = new vis.DataSet(
+                graphStructure.edges.map(edge => ({
+                    from: edge.from,
+                    to: edge.to,
+                    color: {
+                        color: COLORS.baseEdge,
+                        highlight: '#667eea'
+                    },
+                    width: 2,
+                    smooth: {
+                        enabled: true,
+                        type: 'continuous'
+                    },
+                    label: String(edge.weight),
+                    font: {
+                        size: 10,
+                        color: '#7f8c8d'
+                    }
+                }))
+            );
+
+            const data = { nodes, edges };
+
+            const options = {
+                physics: {
+                    enabled: true,
+                    solver: 'forceAtlas2Based',
+                    forceAtlas2Based: {
+                        gravitationalConstant: -50,
+                        centralGravity: 0.01,
+                        springLength: 200,
+                        springConstant: 0.08,
+                        damping: 0.4,
+                        avoidOverlap: 0.5
+                    },
+                    stabilization: {
+                        enabled: true,
+                        iterations: 200,
+                        updateInterval: 25
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    zoomView: true,
+                    dragView: true,
+                    dragNodes: true,
+                    tooltipDelay: 100
+                },
+                edges: {
+                    arrows: {
+                        to: {
+                            enabled: false
+                        }
+                    }
+                },
+                layout: {
+                    improvedLayout: true,
+                    hierarchical: false
+                }
+            };
+
+            network = new vis.Network(container, data, options);
+
+            // Esperar a que la física se estabilice
+            network.on('stabilizationIterationsDone', function () {
+                network.setOptions({ physics: false });
+            });
+
             // Seleccionar primera ruta
             if (rutasDisponibles && rutasDisponibles.length > 0) {
                 seleccionarRuta(rutasDisponibles[0].id);
             }
-        }
-
-        function dibujarGrid() {
-            const grid = document.getElementById('grid-lines');
-            for (let x = 100; x < 1200; x += 100) {
-                const line = createSVGElement('line', {
-                    x1: x, y1: 50, x2: x, y2: 750,
-                    stroke: '#000', 'stroke-width': 1
-                });
-                grid.appendChild(line);
-            }
-            for (let y = 100; y < 800; y += 100) {
-                const line = createSVGElement('line', {
-                    x1: 50, y1: y, x2: 1150, y2: y,
-                    stroke: '#000', 'stroke-width': 1
-                });
-                grid.appendChild(line);
-            }
-        }
-
-        function dibujarConexiones() {
-            const container = document.getElementById('map-connections');
-            conexionesBase.forEach(([desde, hacia]) => {
-                const n1 = nodosMapa[desde];
-                const n2 = nodosMapa[hacia];
-                if (n1 && n2) {
-                    const line = createSVGElement('line', {
-                        x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y,
-                        stroke: '#dee2e6', 'stroke-width': 4,
-                        'stroke-linecap': 'round', opacity: 0.6
-                    });
-                    container.appendChild(line);
-                }
-            });
-        }
-
-        function dibujarNodos() {
-            const container = document.getElementById('map-nodes');
-            const labels = document.getElementById('map-labels');
-            
-            Object.entries(nodosMapa).forEach(([key, nodo]) => {
-                // Grupo del nodo
-                const g = createSVGElement('g', {
-                    class: `map-node node-${nodo.type}`,
-                    id: `node-${key.replace(/\s+/g, '-')}`
-                });
-                
-                // Círculo con sombra
-                const shadow = createSVGElement('circle', {
-                    cx: nodo.x, cy: nodo.y + 3, r: 35,
-                    fill: '#00000020', filter: 'blur(6px)'
-                });
-                
-                const circle = createSVGElement('circle', {
-                    cx: nodo.x, cy: nodo.y, r: 32,
-                    fill: 'white', stroke: getNodeColor(nodo.type),
-                    'stroke-width': 4, class: 'node-circle'
-                });
-                
-                // Icono
-                const icon = createSVGElement('text', {
-                    x: nodo.x, y: nodo.y + 8,
-                    'text-anchor': 'middle', 'font-size': 28,
-                    class: 'node-icon'
-                });
-                icon.textContent = nodo.icon;
-                
-                // Label
-                const label = createSVGElement('text', {
-                    x: nodo.x, y: nodo.y + 55,
-                    'text-anchor': 'middle', 'font-size': 16,
-                    'font-weight': 'bold', fill: '#2c3e50',
-                    class: 'node-label'
-                });
-                label.textContent = nodo.label;
-                
-                g.appendChild(shadow);
-                g.appendChild(circle);
-                g.appendChild(icon);
-                container.appendChild(g);
-                labels.appendChild(label);
-            });
         }
 
         function seleccionarRuta(id) {
@@ -360,7 +319,7 @@
             
             rutaActiva = ruta;
             
-            // Actualizar UI
+            // Actualizar UI de las tarjetas de rutas
             document.querySelectorAll('.route-card').forEach(card => {
                 card.classList.toggle('active', card.dataset.routeId == id);
             });
@@ -369,66 +328,99 @@
             document.getElementById('routeDistance').textContent = ruta.costo;
             document.getElementById('routeSteps').textContent = ruta.ruta.length;
             
-            // Dibujar en mapa
-            dibujarRutaEnMapa(ruta.ruta);
+            // Resaltar ruta en el grafo
+            resaltarRutaEnGrafo(ruta);
             actualizarTimeline(ruta.ruta);
         }
 
-        function dibujarRutaEnMapa(ruta) {
-            const container = document.getElementById('active-routes');
-            container.innerHTML = '';
-            
-            // RESETEAR TODOS LOS NODOS - Importante para eliminar estados anteriores
-            document.querySelectorAll('.map-node').forEach(n => {
-                n.classList.remove('active', 'has-products', 'transit');
-                // Resetear estilos inline que puedan quedar
-                const circle = n.querySelector('circle');
-                if (circle) {
-                    circle.style.fill = '';
-                    circle.style.stroke = '';
-                    circle.style.strokeWidth = '';
-                }
+        function resaltarRutaEnGrafo(ruta) {
+            if (!network) return;
+
+            const nodes = network.body.data.nodes;
+            const edges = network.body.data.edges;
+
+            // Resetear todos los bordes a color base
+            edges.forEach(edge => {
+                edges.update({
+                    id: edge.id,
+                    color: { color: COLORS.baseEdge },
+                    width: 2,
+                    arrows: { to: { enabled: false } }
+                });
             });
-            
-            // Dibujar líneas de ruta
-            for (let i = 0; i < ruta.length - 1; i++) {
-                const n1 = nodosMapa[ruta[i]];
-                const n2 = nodosMapa[ruta[i + 1]];
+
+            // Resetear todos los nodos
+            nodes.forEach(node => {
+                const nodeData = graphStructure.nodes.find(n => n.id === node.id);
+                const tieneProductos = productosPorPasillo[node.id] && productosPorPasillo[node.id].length > 0;
+                let color = COLORS[nodeData.type];
+                if (tieneProductos && nodeData.type === 'aisle') {
+                    color = COLORS.hasProducts;
+                }
                 
-                if (n1 && n2) {
-                    const line = createSVGElement('line', {
-                        x1: n1.x, y1: n1.y, x2: n2.x, y2: n2.y,
-                        stroke: 'url(#routeGradient)',
-                        'stroke-width': 8, 'stroke-linecap': 'round',
-                        'stroke-dasharray': '1000', 'stroke-dashoffset': '1000',
-                        'marker-end': 'url(#arrowhead)', filter: 'url(#glow)'
+                nodes.update({
+                    id: node.id,
+                    color: {
+                        background: color,
+                        border: color
+                    },
+                    borderWidth: 3,
+                    size: tieneProductos ? 35 : 25
+                });
+            });
+
+            // Resaltar la ruta seleccionada
+            const rutaPath = ruta.ruta;
+            for (let i = 0; i < rutaPath.length - 1; i++) {
+                const desde = rutaPath[i];
+                const hacia = rutaPath[i + 1];
+                
+                // Encontrar la arista
+                const edgeId = edges.get({
+                    filter: item => (item.from === desde && item.to === hacia) || 
+                                   (item.from === hacia && item.to === desde)
+                })[0];
+
+                if (edgeId) {
+                    const color = ruta.es_optima ? COLORS.optimal : 
+                                (ruta.id === 1 ? COLORS.alternative1 : COLORS.alternative2);
+                    
+                    edges.update({
+                        id: edgeId.id,
+                        color: {
+                            color: color,
+                            highlight: color
+                        },
+                        width: ruta.es_optima ? 6 : 4,
+                        arrows: {
+                            to: {
+                                enabled: true,
+                                scaleFactor: 0.5
+                            }
+                        }
                     });
-                    
-                    // Animación
-                    setTimeout(() => {
-                        line.style.transition = 'stroke-dashoffset 0.6s ease';
-                        line.style.strokeDashoffset = '0';
-                    }, i * 100);
-                    
-                    container.appendChild(line);
                 }
             }
-            
-            // Marcar nodos según su estado ACTUAL
-            ruta.forEach(nombreNodo => {
-                const nodeEl = document.getElementById(`node-${nombreNodo.replace(/\s+/g, '-')}`);
-                if (nodeEl) {
-                    nodeEl.classList.add('active');
-                    
-                    // Verificar si tiene productos ACTUALMENTE
-                    const tieneProductos = productosPorPasillo[nombreNodo] && productosPorPasillo[nombreNodo].length > 0;
-                    
-                    if (tieneProductos) {
-                        nodeEl.classList.add('has-products');
-                    } else if (nombreNodo !== 'Entrada' && !nombreNodo.startsWith('Caja')) {
-                        nodeEl.classList.add('transit');
-                    }
+
+            // Resaltar nodos en la ruta
+            rutaPath.forEach(nodeId => {
+                const nodeData = graphStructure.nodes.find(n => n.id === nodeId);
+                const tieneProductos = productosPorPasillo[nodeId] && productosPorPasillo[nodeId].length > 0;
+                
+                let color = COLORS[nodeData.type];
+                if (tieneProductos && nodeData.type === 'aisle') {
+                    color = COLORS.hasProducts;
                 }
+                
+                nodes.update({
+                    id: nodeId,
+                    borderWidth: 5,
+                    color: {
+                        background: color,
+                        border: '#2c3e50'
+                    },
+                    size: tieneProductos ? 40 : 30
+                });
             });
         }
 
@@ -438,13 +430,14 @@
             
             ruta.forEach((paso, index) => {
                 const productos = productosPorPasillo[paso] || [];
+                const nodoInfo = graphStructure.nodes.find(n => n.id === paso);
                 const div = document.createElement('div');
                 div.className = 'timeline-step' + (productos.length > 0 ? ' has-products' : '');
                 
                 div.innerHTML = `
                     <div class="timeline-marker">${index + 1}</div>
                     <div class="timeline-content">
-                        <h4 class="timeline-title">${nodosMapa[paso]?.icon || '📍'} ${paso}</h4>
+                        <h4 class="timeline-title">${nodoInfo?.icon || '📍'} ${paso}</h4>
                         ${productos.length > 0 ? `
                             <div class="timeline-products">
                                 <strong>Recoger ${productos.length} producto${productos.length > 1 ? 's' : ''}:</strong>
@@ -457,33 +450,32 @@
             });
         }
 
-        // Funciones de control
+        // Funciones de control (mantener para compatibilidad con botones)
         function zoomIn() {
-            zoomLevel = Math.min(zoomLevel + 0.2, 2);
-            applyZoom();
+            if (network) {
+                const scale = network.getScale();
+                network.moveTo({ scale: scale * 1.2 });
+            }
         }
 
         function zoomOut() {
-            zoomLevel = Math.max(zoomLevel - 0.2, 0.5);
-            applyZoom();
+            if (network) {
+                const scale = network.getScale();
+                network.moveTo({ scale: scale / 1.2 });
+            }
         }
 
         function resetView() {
-            zoomLevel = 1;
-            applyZoom();
-        }
-
-        function applyZoom() {
-            const map = document.getElementById('store-map');
-            map.style.transform = `scale(${zoomLevel})`;
-            map.style.transition = 'transform 0.3s ease';
+            if (network) {
+                network.fit({ animation: true });
+            }
         }
 
         // Gestión de productos
         function eliminarProducto(nombre) {
             if (!confirm(`¿Eliminar "${nombre}" de tu ruta?\n\nLa ruta se recalculará automáticamente.`)) return;
             
-            // Mostrar indicador de carga con clase CSS
+            // Mostrar indicador de carga
             const productItem = document.querySelector(`[data-product="${nombre}"]`);
             if (productItem) {
                 productItem.classList.add('removing');
@@ -501,8 +493,8 @@
                 console.error('Error al actualizar sessionStorage:', error);
             }
             
-            // Redirigir al endpoint de eliminación
-            window.location.href = `/grafos/eliminar-producto/${encodeURIComponent(nombre)}/`;
+            // Redirigir al endpoint de eliminación (CORREGIDO: sin /grafos/)
+            window.location.href = `/eliminar-producto/${encodeURIComponent(nombre)}/`;
         }
 
         // Tabs
@@ -525,24 +517,8 @@
             });
         });
 
-        // Utilidades SVG
-        function createSVGElement(tag, attrs) {
-            const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
-            return el;
-        }
-
-        function getNodeColor(type) {
-            const colors = {
-                start: '#28a745',
-                end: '#dc3545',
-                aisle: '#6c757d'
-            };
-            return colors[type] || '#6c757d';
-        }
-
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', inicializarMapa);
+        // Inicializar cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', inicializarGrafo);
     </script>
     {% else %}
     <!-- Sin ruta -->

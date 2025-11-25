@@ -328,6 +328,45 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
         'rutas': rutas_procesadas, # Lista de todas las opciones
         'ruta_activa': ruta_activa, # La ruta seleccionada actualmente (para compatibilidad)
         'productos_por_pasillo': productos_por_pasillo,
+        'graph_structure': {
+            'nodes': [
+                {'id': 'Entrada', 'label': 'Entrada', 'type': 'start', 'icon': '🚪'},
+                {'id': 'Pasillo 1', 'label': 'Lácteos', 'type': 'aisle', 'icon': '🥛'},
+                {'id': 'Pasillo 2', 'label': 'Aseo', 'type': 'aisle', 'icon': '🧼'},
+                {'id': 'Pasillo 3', 'label': 'Granos', 'type': 'aisle', 'icon': '🌾'},
+                {'id': 'Pasillo 4', 'label': 'Bebidas', 'type': 'aisle', 'icon': '🥤'},
+                {'id': 'Pasillo 5', 'label': 'Snacks', 'type': 'aisle', 'icon': '🍿'},
+                {'id': 'Pasillo 6', 'label': 'Panadería', 'type': 'aisle', 'icon': '🍞'},
+                {'id': 'Pasillo 7', 'label': 'Ropa', 'type': 'aisle', 'icon': '👕'},
+                {'id': 'Pasillo 8', 'label': 'Electro', 'type': 'aisle', 'icon': '📺'},
+                {'id': 'Caja 1', 'label': 'Caja 1', 'type': 'end', 'icon': '🛒'},
+                {'id': 'Caja 2', 'label': 'Caja 2', 'type': 'end', 'icon': '🛒'},
+                {'id': 'Caja 3', 'label': 'Caja 3', 'type': 'end', 'icon': '🛒'},
+                {'id': 'Caja 4', 'label': 'Caja 4', 'type': 'end', 'icon': '🛒'}
+            ],
+            'edges': [
+                {'from': 'Entrada', 'to': 'Pasillo 1', 'weight': 1},
+                {'from': 'Entrada', 'to': 'Pasillo 4', 'weight': 2},
+                {'from': 'Pasillo 1', 'to': 'Pasillo 2', 'weight': 1},
+                {'from': 'Pasillo 2', 'to': 'Pasillo 3', 'weight': 1},
+                {'from': 'Pasillo 3', 'to': 'Pasillo 7', 'weight': 1},
+                {'from': 'Pasillo 4', 'to': 'Pasillo 5', 'weight': 1},
+                {'from': 'Pasillo 5', 'to': 'Pasillo 6', 'weight': 1},
+                {'from': 'Pasillo 6', 'to': 'Pasillo 8', 'weight': 1},
+                {'from': 'Pasillo 1', 'to': 'Pasillo 4', 'weight': 2},
+                {'from': 'Pasillo 2', 'to': 'Pasillo 5', 'weight': 2},
+                {'from': 'Pasillo 3', 'to': 'Pasillo 6', 'weight': 2},
+                {'from': 'Pasillo 7', 'to': 'Pasillo 8', 'weight': 2},
+                {'from': 'Pasillo 3', 'to': 'Caja 1', 'weight': 1},
+                {'from': 'Pasillo 7', 'to': 'Caja 1', 'weight': 1},
+                {'from': 'Pasillo 6', 'to': 'Caja 2', 'weight': 1},
+                {'from': 'Pasillo 4', 'to': 'Caja 3', 'weight': 2},
+                {'from': 'Pasillo 8', 'to': 'Caja 4', 'weight': 1},
+                {'from': 'Caja 1', 'to': 'Caja 2', 'weight': 2},
+                {'from': 'Caja 2', 'to': 'Caja 4', 'weight': 2},
+                {'from': 'Caja 3', 'to': 'Caja 4', 'weight': 2}
+            ]
+        }
     }
 
 
