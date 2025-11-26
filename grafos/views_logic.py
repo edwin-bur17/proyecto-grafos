@@ -138,35 +138,29 @@ def construir_grafo_tienda():
     """
     Construye y configura el grafo de la tienda usando analogía de Google Maps.
     
-    ANALOGÍA GOOGLE MAPS:
-    - Pasillos = Calles/Rutas de navegación (círculos pequeños)
-    - Estantes = Edificios/Destinos (rectángulos alargados)
-    - Cajas = Destino final
-    
-    ESTRUCTURA TIPO MAPA:
-    - Pasillo Central: Ruta principal horizontal
-    - Pasillos 1-3: Rutas verticales (norte-centro-sur)
-    - Estantes: Bloques rectangulares a los lados
+    LAYOUT: Cuadrícula de pasillos paralelos (similar a supermercado real)
+    - Pasillos = 3 columnas verticales paralelas
+    - Estantes = Rectángulos a los lados de cada pasillo
+    - Entrada conecta directamente a los pasillos
     """
     global grafo_tienda
     grafo_tienda = Grafo()
     
-    # Definir RUTAS DE NAVEGACIÓN (pasillos)
+    # Definir RUTAS DE NAVEGACIÓN (pasillos en cuadrícula)
     pasillos = {
         "Entrada": 0.2,
-        "Pasillo Central": 0.2,  # Ruta principal horizontal
         
-        # Pasillo 1 (Izquierda) - 3 segmentos
+        # Pasillo 1 (Izquierda) - 3 segmentos verticales
         "Pasillo 1 Norte": 0.2,
         "Pasillo 1 Centro": 0.2,
         "Pasillo 1 Sur": 0.2,
         
-        # Pasillo 2 (Centro) - 3 segmentos
+        # Pasillo 2 (Centro) - 3 segmentos verticales
         "Pasillo 2 Norte": 0.2,
         "Pasillo 2 Centro": 0.2,
         "Pasillo 2 Sur": 0.2,
         
-        # Pasillo 3 (Derecha) - 3 segmentos
+        # Pasillo 3 (Derecha) - 3 segmentos verticales
         "Pasillo 3 Norte": 0.2,
         "Pasillo 3 Centro": 0.2,
         "Pasillo 3 Sur": 0.2,
@@ -199,25 +193,22 @@ def construir_grafo_tienda():
     for nodo, congestion in {**pasillos, **estantes}.items():
         grafo_tienda.agregar_nodo(nodo, congestion)
     
-    # CONEXIONES TIPO MAPA DE NAVEGACIÓN
+    # CONEXIONES (mantener todas para cálculo de rutas)
     conexiones = [
-        # Entrada a Pasillo Central
-        ("Entrada", "Pasillo Central", 1),
+        # Entrada conecta directamente a los 3 pasillos Norte
+        ("Entrada", "Pasillo 1 Norte", 1),
+        ("Entrada", "Pasillo 2 Norte", 1),
+        ("Entrada", "Pasillo 3 Norte", 1),
         
-        # Pasillo Central a inicio de cada pasillo vertical
-        ("Pasillo Central", "Pasillo 1 Norte", 1),
-        ("Pasillo Central", "Pasillo 2 Norte", 1),
-        ("Pasillo Central", "Pasillo 3 Norte", 1),
-        
-        # PASILLO 1 (flujo norte → centro → sur)
+        # PASILLO 1 (flujo vertical)
         ("Pasillo 1 Norte", "Pasillo 1 Centro", 1),
         ("Pasillo 1 Centro", "Pasillo 1 Sur", 1),
         
-        # PASILLO 2 (flujo norte → centro → sur)
+        # PASILLO 2 (flujo vertical)
         ("Pasillo 2 Norte", "Pasillo 2 Centro", 1),
         ("Pasillo 2 Centro", "Pasillo 2 Sur", 1),
         
-        # PASILLO 3 (flujo norte → centro → sur)
+        # PASILLO 3 (flujo vertical)
         ("Pasillo 3 Norte", "Pasillo 3 Centro", 1),
         ("Pasillo 3 Centro", "Pasillo 3 Sur", 1),
         
@@ -229,7 +220,7 @@ def construir_grafo_tienda():
         ("Pasillo 1 Sur", "Pasillo 2 Sur", 2),
         ("Pasillo 2 Sur", "Pasillo 3 Sur", 2),
         
-        # ESTANTES conectados a pasillos (bloques de destino)
+        # ESTANTES conectados a pasillos
         ("Pasillo 1 Norte", "Estante Lácteos", 0.5),
         ("Pasillo 1 Norte", "Estante Aseo", 0.5),
         ("Pasillo 1 Centro", "Estante Frutas", 0.5),
@@ -246,7 +237,7 @@ def construir_grafo_tienda():
         ("Pasillo 3 Sur", "Estante Congelados", 0.5),
         ("Pasillo 3 Sur", "Estante Mascotas", 0.5),
         
-        # Pasillos a Cajas (4 cajas en total)
+        # Pasillos a Cajas (4 cajas)
         ("Pasillo 1 Sur", "Caja 1", 1),
         ("Pasillo 2 Sur", "Caja 2", 1),
         ("Pasillo 2 Sur", "Caja 3", 1),
@@ -341,62 +332,180 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
     # Lista de cajas disponibles (ahora 4)
     cajas_disponibles = ["Caja 1", "Caja 2", "Caja 3", "Caja 4"]
     
-    # Calcular top rutas (usando pasillo_inicio="Entrada")
+    # Agrupar estantes por pasillo de tránsito más cercano
     if pasillos_necesarios:
-        top_rutas = grafo_tienda.calcular_top_rutas(
-            pasillos_necesarios,
-            inicio=pasillo_inicio,
-            top_k=3
-        )
+        pasillos_transito = {}  # {pasillo_nodo: [estantes]}
         
-        rutas_procesadas = []
-        for i, (ruta, costo) in enumerate(top_rutas):
-            ruta_final = list(ruta)
-            costo_final = costo
+        for estante in pasillos_necesarios:
+            pasillo_cercano = None
+            min_distancia = float('inf')
             
-            # Asegurar que SIEMPRE inicie en "Entrada"
-            if not ruta_final or ruta_final[0] != "Entrada":
-                # Si no inicia en Entrada, calcular ruta desde Entrada al primer punto
-                if ruta_final:
-                    ruta_desde_entrada, costo_entrada = grafo_tienda.ruta_mas_corta("Entrada", ruta_final[0])
-                    if ruta_desde_entrada:
-                        ruta_final = ruta_desde_entrada[:-1] + ruta_final
-                        costo_final += costo_entrada
-                else:
-                    ruta_final = ["Entrada"]
+            # Buscar el nodo de pasillo más cercano
+            for nodo in grafo_tienda.nodos:
+                if "Pasillo" in nodo and nodo != "Entrada":
+                    ruta, costo = grafo_tienda.ruta_mas_corta(nodo, estante)
+                    if ruta and costo < min_distancia:
+                        min_distancia = costo
+                        pasillo_cercano = nodo
             
-            # Encontrar la caja más cercana al último pasillo con productos
-            if ruta_final and ruta_final[-1] not in cajas_disponibles:
-                ultimo_pasillo = ruta_final[-1]
+            if pasillo_cercano:
+                if pasillo_cercano not in pasillos_transito:
+                    pasillos_transito[pasillo_cercano] = []
+                pasillos_transito[pasillo_cercano].append(estante)
+        
+        # CRÍTICO: Obtener lista ÚNICA de pasillos (sin duplicados)
+        pasillos_a_visitar = list(pasillos_transito.keys())
+        
+        if pasillos_a_visitar:
+            # Calcular las mejores rutas entre pasillos
+            top_rutas_pasillos = grafo_tienda.calcular_top_rutas(
+                pasillos_a_visitar,
+                inicio=None,  # Sin inicio forzado
+                top_k=3
+            )
+            
+            rutas_procesadas = []
+            for i, (orden_pasillos, costo_entre_pasillos) in enumerate(top_rutas_pasillos):
+                # FILTRAR: Remover "Entrada" y duplicados de la lista de pasillos
+                orden_pasillos_limpio = []
+                vistos = set()
+                for p in orden_pasillos:
+                    if p != "Entrada" and p not in vistos:
+                        orden_pasillos_limpio.append(p)
+                        vistos.add(p)
                 
-                # Calcular distancias a TODAS las cajas para encontrar la óptima
-                distancias_cajas = []
-                for caja in cajas_disponibles:
-                    ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ultimo_pasillo, caja)
-                    if ruta_a_caja:
-                        distancias_cajas.append({
-                            'caja': caja,
-                            'ruta': ruta_a_caja,
-                            'costo': costo_caja
-                        })
+                # Construir ruta completa
+                ruta_completa = ["Entrada"]
+                costo_total = 0
                 
-                # Ordenar por costo y seleccionar la más cercana
-                if distancias_cajas:
-                    distancias_cajas.sort(key=lambda x: x['costo'])
-                    mejor_opcion = distancias_cajas[0]
+                # Para cada pasillo en el orden LIMPIO (sin duplicados ni Entrada)
+                for idx_pasillo, pasillo in enumerate(orden_pasillos_limpio):
+                    # Calcular ruta desde el punto actual al pasillo
+                    punto_actual = ruta_completa[-1]
                     
-                    # Agregar ruta a la caja más cercana
-                    ruta_final.extend(mejor_opcion['ruta'][1:])  # Evitar duplicar el último pasillo
-                    costo_final += mejor_opcion['costo']
-            
-            rutas_procesadas.append({
-                'id': i,
-                'nombre': 'Ruta Óptima' if i == 0 else f'Alternativa {i}',
-                'ruta': ruta_final,
-                'costo': round(costo_final, 2),
-                'es_optima': i == 0
-            })
-            
+                    if punto_actual != pasillo:
+                        ruta_al_pasillo, costo_al_pasillo = grafo_tienda.ruta_mas_corta(punto_actual, pasillo)
+                        if ruta_al_pasillo:
+                            # CRÍTICO: Filtrar "Entrada" de rutas intermedias
+                            if "Entrada" in ruta_al_pasillo[1:]:
+                                # La ruta pasa por Entrada - buscar alternativa
+                                # Intentar ruta horizontal a través de Pasillo 2
+                                ruta_alternativa = None
+                                
+                                # Extraer el número de pasillo (1, 2, 3) y nivel (Norte, Centro, Sur)
+                                def extraer_info_pasillo(nombre):
+                                    partes = nombre.split()
+                                    if len(partes) >= 3 and partes[0] == "Pasillo":
+                                        try:
+                                            numero = int(partes[1])
+                                            nivel = partes[2] if len(partes) > 2 else ""
+                                            return numero, nivel
+                                        except:
+                                            pass
+                                    return None, None
+                                
+                                num_actual, nivel_actual = extraer_info_pasillo(punto_actual)
+                                num_destino, nivel_destino = extraer_info_pasillo(pasillo)
+                                
+                                # Si ambos son pasillos con info válida
+                                if num_actual and num_destino and nivel_actual:
+                                    # Construir ruta horizontal
+                                    ruta_horizontal = []
+                                    
+                                    if num_actual < num_destino:
+                                        # Ir de izquierda a derecha
+                                        for n in range(num_actual, num_destino + 1):
+                                            nodo = f"Pasillo {n} {nivel_actual}"
+                                            if nodo in grafo_tienda.nodos:
+                                                ruta_horizontal.append(nodo)
+                                    else:
+                                        # Ir de derecha a izquierda
+                                        for n in range(num_actual, num_destino - 1, -1):
+                                            nodo = f"Pasillo {n} {nivel_actual}"
+                                            if nodo in grafo_tienda.nodos:
+                                                ruta_horizontal.append(nodo)
+                                    
+                                    # Si el nivel cambia, agregar movimiento vertical
+                                    if nivel_destino != nivel_actual and num_destino in [1, 2, 3]:
+                                        nodo_destino_final = f"Pasillo {num_destino} {nivel_destino}"
+                                        if nodo_destino_final in grafo_tienda.nodos:
+                                            if nodo_destino_final not in ruta_horizontal:
+                                                ruta_horizontal.append(nodo_destino_final)
+                                    
+                                    if ruta_horizontal and len(ruta_horizontal) > 1:
+                                        # Usar ruta horizontal construida
+                                        ruta_completa.extend(ruta_horizontal[1:])  # Sin duplicar punto actual
+                                        # Costo aproximado
+                                        costo_total += len(ruta_horizontal) - 1
+                                    else:
+                                        # Fallback: agregar solo el destino
+                                        ruta_completa.append(pasillo)
+                                else:
+                                    # No se pudo construir ruta horizontal - agregar destino directamente
+                                    ruta_completa.append(pasillo)
+                                    print(f"⚠️ Advertencia: Salto directo de {punto_actual} a {pasillo}")
+                            else:
+                                # Ruta válida sin Entrada
+                                ruta_completa.extend(ruta_al_pasillo[1:])
+                                costo_total += costo_al_pasillo
+                    
+                    # Visitar estantes en este pasillo
+                    estantes = pasillos_transito.get(pasillo, [])
+                    for estante in estantes:
+                        # Ir al estante
+                        if estante not in ruta_completa:
+                            ruta_al_estante, costo_estante = grafo_tienda.ruta_mas_corta(pasillo, estante)
+                            if ruta_al_estante and len(ruta_al_estante) > 1:
+                                ruta_completa.append(estante)
+                                costo_total += costo_estante
+                                # Volver al pasillo
+                                ruta_completa.append(pasillo)
+                                costo_total += costo_estante
+                
+                # Ir a la caja más cercana
+                ultimo_punto = ruta_completa[-1]
+                if ultimo_punto not in cajas_disponibles:
+                    mejor_caja = None
+                    menor_costo_caja = float('inf')
+                    
+                    for caja in cajas_disponibles:
+                        ruta_a_caja, costo_caja = grafo_tienda.ruta_mas_corta(ultimo_punto, caja)
+                        if ruta_a_caja and costo_caja < menor_costo_caja:
+                            mejor_caja = ruta_a_caja
+                            menor_costo_caja = costo_caja
+                    
+                    if mejor_caja:
+                        ruta_completa.extend(mejor_caja[1:])
+                        costo_total += menor_costo_caja
+                
+                # DEBUG: Imprimir la ruta para diagnóstico
+                print(f"\n{'='*60}")
+                print(f"DEBUG - RUTA {i+1} ({'ÓPTIMA' if i == 0 else 'ALTERNATIVA'})")
+                print(f"{'='*60}")
+                print(f"Pasillos originales: {orden_pasillos}")
+                print(f"Pasillos limpios: {orden_pasillos_limpio}")
+                print(f"Ruta completa generada:")
+                for idx, nodo in enumerate(ruta_completa):
+                    print(f"  {idx}: {nodo}")
+                print(f"Costo total: {costo_total}")
+                
+                # Verificar si Entrada aparece más de una vez
+                entrada_count = ruta_completa.count("Entrada")
+                if entrada_count > 1:
+                    print(f"❌ ERROR: 'Entrada' aparece {entrada_count} veces!")
+                else:
+                    print(f"✅ OK: 'Entrada' aparece solo 1 vez")
+                print(f"{'='*60}\n")
+                
+                rutas_procesadas.append({
+                    'id': i,
+                    'nombre': 'Ruta Óptima' if i == 0 else f'Alternativa {i}',
+                    'ruta': ruta_completa,
+                    'costo': round(costo_total, 2),
+                    'es_optima': i == 0
+                })
+        else:
+            rutas_procesadas = []
     else:
         # Caso sin productos: calcular distancias a todas las cajas desde Entrada
         distancias_cajas = []
@@ -442,74 +551,68 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
         'productos_por_pasillo': productos_por_pasillo,
         'graph_structure': {
             'nodes': [
-                # ENTRADA
-                {'id': 'Entrada', 'label': '🚪', 'type': 'start', 'icon': '🚪', 'position': {'x': 0, 'y': -600}},
+                # ENTRADA (arriba centro)
+                {'id': 'Entrada', 'label': '🚪', 'type': 'start', 'icon': '🚪', 'position': {'x': 0, 'y': -650}},
                 
-                # PASILLO CENTRAL (ruta principal horizontal)
-                {'id': 'Pasillo Central', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': -400}},
+                # PASILLO 1 (columna izquierda) - 3 segmentos verticales
+                {'id': 'Pasillo 1 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -400, 'y': -350}},
+                {'id': 'Pasillo 1 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -400, 'y': 0}},
+                {'id': 'Pasillo 1 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -400, 'y': 350}},
                 
-                # PASILLO 1 (izquierda) - 3 segmentos verticales
-                {'id': 'Pasillo 1 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': -200}},
-                {'id': 'Pasillo 1 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': 0}},
-                {'id': 'Pasillo 1 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': -300, 'y': 200}},
-                
-                # PASILLO 2 (centro) - 3 segmentos verticales
-                {'id': 'Pasillo 2 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': -200}},
+                # PASILLO 2 (columna centro) - 3 segmentos verticales
+                {'id': 'Pasillo 2 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': -350}},
                 {'id': 'Pasillo 2 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': 0}},
-                {'id': 'Pasillo 2 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': 200}},
+                {'id': 'Pasillo 2 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 0, 'y': 350}},
                 
-                # PASILLO 3 (derecha) - 3 segmentos verticales
-                {'id': 'Pasillo 3 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': -200}},
-                {'id': 'Pasillo 3 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': 0}},
-                {'id': 'Pasillo 3 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 300, 'y': 200}},
+                # PASILLO 3 (columna derecha) - 3 segmentos verticales
+                {'id': 'Pasillo 3 Norte', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 400, 'y': -350}},
+                {'id': 'Pasillo 3 Centro', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 400, 'y': 0}},
+                {'id': 'Pasillo 3 Sur', 'label': '', 'type': 'aisle', 'icon': '', 'position': {'x': 400, 'y': 350}},
                 
-                # BLOQUES (Estantes) - PASILLO 1 OESTE (lado izquierdo)
-                {'id': 'Estante Lácteos', 'label': 'Lácteos', 'type': 'shelf', 'icon': '🥛', 'position': {'x': -450, 'y': -200}},
-                {'id': 'Estante Frutas', 'label': 'Frutas', 'type': 'shelf', 'icon': '🍎', 'position': {'x': -450, 'y': 0}},
-                {'id': 'Estante Verduras', 'label': 'Verduras', 'type': 'shelf', 'icon': '🥬', 'position': {'x': -450, 'y': 200}},
+                # ESTANTES - PASILLO 1 OESTE (lado izquierdo)
+                {'id': 'Estante Lácteos', 'label': 'Lácteos', 'type': 'shelf', 'icon': '🥛', 'position': {'x': -550, 'y': -350}},
+                {'id': 'Estante Frutas', 'label': 'Frutas', 'type': 'shelf', 'icon': '🍎', 'position': {'x': -550, 'y': 0}},
+                {'id': 'Estante Verduras', 'label': 'Verduras', 'type': 'shelf', 'icon': '🥬', 'position': {'x': -550, 'y': 350}},
                 
-                # BLOQUES - PASILLO 1 ESTE (lado derecho)
-                {'id': 'Estante Aseo', 'label': 'Aseo', 'type': 'shelf', 'icon': '🧼', 'position': {'x': -150, 'y': -200}},
-                {'id': 'Estante Limpieza', 'label': 'Limpieza', 'type': 'shelf', 'icon': '🧹', 'position': {'x': -150, 'y': 0}},
-                {'id': 'Estante Granos', 'label': 'Granos', 'type': 'shelf', 'icon': '🌾', 'position': {'x': -150, 'y': 200}},
+                # ESTANTES - PASILLO 1 ESTE (lado derecho)
+                {'id': 'Estante Aseo', 'label': 'Aseo', 'type': 'shelf', 'icon': '🧼', 'position': {'x': -250, 'y': -350}},
+                {'id': 'Estante Limpieza', 'label': 'Limpieza', 'type': 'shelf', 'icon': '🧹', 'position': {'x': -250, 'y': 0}},
+                {'id': 'Estante Granos', 'label': 'Granos', 'type': 'shelf', 'icon': '🌾', 'position': {'x': -250, 'y': 350}},
                 
-                # BLOQUES - PASILLO 2 OESTE
-                {'id': 'Estante Pastas', 'label': 'Pastas', 'type': 'shelf', 'icon': '🍝', 'position': {'x': -150, 'y': -200}},
+                # ESTANTES - PASILLO 2 OESTE
+                {'id': 'Estante Pastas', 'label': 'Pastas', 'type': 'shelf', 'icon': '🍝', 'position': {'x': -150, 'y': -350}},
                 {'id': 'Estante Panadería', 'label': 'Panadería', 'type': 'shelf', 'icon': '🍞', 'position': {'x': -150, 'y': 0}},
-                {'id': 'Estante Bebidas', 'label': 'Bebidas', 'type': 'shelf', 'icon': '🥤', 'position': {'x': -150, 'y': 200}},
+                {'id': 'Estante Bebidas', 'label': 'Bebidas', 'type': 'shelf', 'icon': '🥤', 'position': {'x': -150, 'y': 350}},
                 
-                # BLOQUES - PASILLO 3 OESTE
-                {'id': 'Estante Snacks', 'label': 'Snacks', 'type': 'shelf', 'icon': '🍿', 'position': {'x': 150, 'y': -200}},
-                {'id': 'Estante Carnes', 'label': 'Carnes', 'type': 'shelf', 'icon': '🥩', 'position': {'x': 150, 'y': 0}},
-                {'id': 'Estante Congelados', 'label': 'Congelados', 'type': 'shelf', 'icon': '🧊', 'position': {'x': 150, 'y': 200}},
+                # ESTANTES - PASILLO 3 OESTE
+                {'id': 'Estante Snacks', 'label': 'Snacks', 'type': 'shelf', 'icon': '🍿', 'position': {'x': 250, 'y': -350}},
+                {'id': 'Estante Carnes', 'label': 'Carnes', 'type': 'shelf', 'icon': '🥩', 'position': {'x': 250, 'y': 0}},
+                {'id': 'Estante Congelados', 'label': 'Congelados', 'type': 'shelf', 'icon': '🧊', 'position': {'x': 250, 'y': 350}},
                 
-                # BLOQUES - PASILLO 3 ESTE
-                {'id': 'Estante Mascotas', 'label': 'Mascotas', 'type': 'shelf', 'icon': '🐕', 'position': {'x': 450, 'y': 200}},
+                # ESTANTES - PASILLO 3 ESTE
+                {'id': 'Estante Mascotas', 'label': 'Mascotas', 'type': 'shelf', 'icon': '🐕', 'position': {'x': 550, 'y': 350}},
                 
-                # CAJAS (4 al final de las rutas)
-                {'id': 'Caja 1', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -300, 'y': 450}},
-                {'id': 'Caja 2', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -100, 'y': 450}},
-                {'id': 'Caja 3', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 100, 'y': 450}},
-                {'id': 'Caja 4', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 300, 'y': 450}}
+                # CAJAS (4 al final, alineadas horizontalmente)
+                {'id': 'Caja 1', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -300, 'y': 550}},
+                {'id': 'Caja 2', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': -100, 'y': 550}},
+                {'id': 'Caja 3', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 100, 'y': 550}},
+                {'id': 'Caja 4', 'label': '💳', 'type': 'end', 'icon': '💳', 'position': {'x': 300, 'y': 550}}
             ],
             'edges': [
-                # Entrada a Pasillo Central
-                {'from': 'Entrada', 'to': 'Pasillo Central', 'weight': 1},
+                # Entrada a pasillos Norte (conexiones directas)
+                {'from': 'Entrada', 'to': 'Pasillo 1 Norte', 'weight': 1},
+                {'from': 'Entrada', 'to': 'Pasillo 2 Norte', 'weight': 1},
+                {'from': 'Entrada', 'to': 'Pasillo 3 Norte', 'weight': 1},
                 
-                # Pasillo Central a inicio de cada pasillo
-                {'from': 'Pasillo Central', 'to': 'Pasillo 1 Norte', 'weight': 1},
-                {'from': 'Pasillo Central', 'to': 'Pasillo 2 Norte', 'weight': 1},
-                {'from': 'Pasillo Central', 'to': 'Pasillo 3 Norte', 'weight': 1},
-                
-                # PASILLO 1 (flujo norte → centro → sur)
+                # PASILLO 1 (flujo vertical)
                 {'from': 'Pasillo 1 Norte', 'to': 'Pasillo 1 Centro', 'weight': 1},
                 {'from': 'Pasillo 1 Centro', 'to': 'Pasillo 1 Sur', 'weight': 1},
                 
-                # PASILLO 2 (flujo norte → centro → sur)
+                # PASILLO 2 (flujo vertical)
                 {'from': 'Pasillo 2 Norte', 'to': 'Pasillo 2 Centro', 'weight': 1},
                 {'from': 'Pasillo 2 Centro', 'to': 'Pasillo 2 Sur', 'weight': 1},
                 
-                # PASILLO 3 (flujo norte → centro → sur)
+                # PASILLO 3 (flujo vertical)
                 {'from': 'Pasillo 3 Norte', 'to': 'Pasillo 3 Centro', 'weight': 1},
                 {'from': 'Pasillo 3 Centro', 'to': 'Pasillo 3 Sur', 'weight': 1},
                 
@@ -521,7 +624,7 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
                 {'from': 'Pasillo 1 Sur', 'to': 'Pasillo 2 Sur', 'weight': 2},
                 {'from': 'Pasillo 2 Sur', 'to': 'Pasillo 3 Sur', 'weight': 2},
                 
-                # BLOQUES en PASILLO 1
+                # ESTANTES en PASILLO 1
                 {'from': 'Pasillo 1 Norte', 'to': 'Estante Lácteos', 'weight': 0.5},
                 {'from': 'Pasillo 1 Norte', 'to': 'Estante Aseo', 'weight': 0.5},
                 {'from': 'Pasillo 1 Centro', 'to': 'Estante Frutas', 'weight': 0.5},
@@ -529,12 +632,12 @@ def calcular_ruta_automatica(nombres_productos, pasillo_inicio="Entrada"):
                 {'from': 'Pasillo 1 Sur', 'to': 'Estante Verduras', 'weight': 0.5},
                 {'from': 'Pasillo 1 Sur', 'to': 'Estante Granos', 'weight': 0.5},
                 
-                # BLOQUES en PASILLO 2
+                # ESTANTES en PASILLO 2
                 {'from': 'Pasillo 2 Norte', 'to': 'Estante Pastas', 'weight': 0.5},
                 {'from': 'Pasillo 2 Centro', 'to': 'Estante Panadería', 'weight': 0.5},
                 {'from': 'Pasillo 2 Sur', 'to': 'Estante Bebidas', 'weight': 0.5},
                 
-                # BLOQUES en PASILLO 3
+                # ESTANTES en PASILLO 3
                 {'from': 'Pasillo 3 Norte', 'to': 'Estante Snacks', 'weight': 0.5},
                 {'from': 'Pasillo 3 Centro', 'to': 'Estante Carnes', 'weight': 0.5},
                 {'from': 'Pasillo 3 Sur', 'to': 'Estante Congelados', 'weight': 0.5},
